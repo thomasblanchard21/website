@@ -8,7 +8,7 @@
     <meta name="keywords" content="blog, accent, {{ site.author }}, {{ site.title }}, jekyll">
     <meta name="author" content="{{ site.author }}">
     {% if page.url == "/404.html" %}
-        <meta http-equiv="refresh" content="5; url=/">
+        <meta http-equiv="refresh" content="5; url={{ "/" | relative_url }}">
     {% endif %}
     {% if page.description %}
         {% assign desc = page.description %}
@@ -22,8 +22,7 @@
     {% endif %}
     <meta name="description" content="{{ desc }}">
     <link href='https://fonts.googleapis.com/css?family=Inconsolata:400,700' rel='stylesheet' type='text/css'>
-    <link rel="alternate" type="application/rss+xml" title="{{ site.title }} RSS" href="/feed.xml" />
-    <link rel="stylesheet" href="{{ site.baseurl }}/css/main.css">
+    <link rel="stylesheet" href="{{ "/css/main.css" | relative_url }}">
     {% if site.favicon %}
         <link rel="icon" type="image/ico" href="{{ site.favicon_location }}">
         <link rel="shortcut-icon" type="image/ico" href="{{ site.favicon_location }}">
@@ -49,23 +48,28 @@
     <meta name="twitter:url" content="{{ url }}">
     {% if site.twitter_image %}
         <meta name="twitter:image" content="{{ site.twitter_image }}">
-    {% else %}
-        <meta name="twitter:image" content="{{ site.profile_picture }}">
+    {% elsif site.profile_picture %}
+        <meta name="twitter:image" content="{{ site.profile_picture | absolute_url }}">
     {% endif %}
 </head>
 <body>
     <div class="wrapper">
         <div class="navbar container">
             {% if site.ins_logo %}
-                <img id="ins-logo" src="{{ site.ins_logo }}" />
+                <img id="ins-logo" src="{{ site.ins_logo | relative_url }}" alt="Institute logo" />
             {% endif %}
-            <a id="author-name" class="alignable pull-left" href="{{ site.url }}{{ site.baseurl }}">{{ site.title }}</a>
+            <a id="author-name" class="alignable pull-left" href="{{ "/" | relative_url }}">{{ site.title }}</a>
             <ul id="navlist" class="alignable pull-right navbar-ul">
                 {% for x in site.nav %}
-                    {% if x.name == "Resume" %}
-                        <li class="alignable pull-left nav-list"><a target="_blank" href="{{ x.link }}">{{ x.name }}</a>
+                    {% if x.link contains "://" %}
+                        {% assign href = x.link %}
                     {% else %}
-                        <li class="alignable pull-left nav-list"><a href="{{ x.link }}">{{ x.name }}</a>
+                        {% assign href = x.link | relative_url %}
+                    {% endif %}
+                    {% if x.name == "Resume" %}
+                        <li class="alignable pull-left nav-list"><a target="_blank" href="{{ href }}">{{ x.name }}</a>
+                    {% else %}
+                        <li class="alignable pull-left nav-list"><a href="{{ href }}">{{ x.name }}</a>
                     {% endif %}
                     {% if forloop.last == false %}
                         /
@@ -84,22 +88,11 @@
                 {{ content }}
                 {% if site.footer == true %}
                     <hr />
-                    <p style="text-align: center; margin-bottom: 10px">
-                    <a href="{{ site.footer_url }}" style="color: black"><small>{{ site.footer_text }}</small></a>
+                    <p class="site-footer">
+                    <a href="{{ site.footer_url }}"><small>{{ site.footer_text }}</small></a>
                     </p>
                 {% endif %}
             </div>
     </div>
-    {% if site.tracking_id %}
-        <script>
-          (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-          (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-          })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-          ga('create', '{{ site.tracking_id }}', 'auto');
-          ga('send', 'pageview');
-        </script>
-    {% endif %}
 </body>
-<footer>
-</footer>
+</html>
