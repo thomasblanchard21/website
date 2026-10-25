@@ -1,0 +1,23 @@
+/*
+ * Header shader background (assets/js/header-shader.js)
+ */
+
+.site-header {
+    position: relative;
+    --header-shader-color: #{$header-shader-color};
+    --header-shader-intensity: #{$header-shader-intensity};
+    .navbar {
+        position: relative;
+        z-index: 1;
+    }
+}
+.header-shader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+}

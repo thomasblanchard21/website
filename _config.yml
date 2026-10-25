@@ -8,6 +8,9 @@ baseurl: ""
 markdown: kramdown
 #ins_logo: "/bits-logo.png"
 
+# Animated WebGL background behind the header; set header_shader: false in a page to disable it there
+header_shader: true
+
 footer: yes
 source_url: "https://github.com/thomasblanchard21/website"
 template_url: "https://github.com/ankitsultana/researcher"

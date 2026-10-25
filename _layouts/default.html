@@ -54,31 +54,33 @@
 </head>
 <body>
     <div class="wrapper">
-        <div class="navbar container">
-            {% if site.ins_logo %}
-                <img id="ins-logo" src="{{ site.ins_logo | relative_url }}" alt="Institute logo" />
-            {% endif %}
-            <a id="author-name" class="alignable pull-left" href="{{ "/" | relative_url }}">{{ site.title }}</a>
-            <ul id="navlist" class="alignable pull-right navbar-ul">
-                {% for x in site.nav %}
-                    {% if x.link contains "://" %}
-                        {% assign href = x.link %}
-                    {% else %}
-                        {% assign href = x.link | relative_url %}
-                    {% endif %}
-                    {% if x.name == "Resume" %}
-                        <li class="alignable pull-left nav-list"><a target="_blank" href="{{ href }}">{{ x.name }}</a>
-                    {% else %}
-                        <li class="alignable pull-left nav-list"><a href="{{ href }}">{{ x.name }}</a>
-                    {% endif %}
-                    {% if forloop.last == false %}
-                        /
-                    {% endif %}
-                        </li>
-                {% endfor %}
-            </ul>
+        <div class="site-header">
+            <div class="navbar container">
+                {% if site.ins_logo %}
+                    <img id="ins-logo" src="{{ site.ins_logo | relative_url }}" alt="Institute logo" />
+                {% endif %}
+                <a id="author-name" class="alignable pull-left" href="{{ "/" | relative_url }}">{{ site.title }}</a>
+                <ul id="navlist" class="alignable pull-right navbar-ul">
+                    {% for x in site.nav %}
+                        {% if x.link contains "://" %}
+                            {% assign href = x.link %}
+                        {% else %}
+                            {% assign href = x.link | relative_url %}
+                        {% endif %}
+                        {% if x.name == "Resume" %}
+                            <li class="alignable pull-left nav-list"><a target="_blank" href="{{ href }}">{{ x.name }}</a>
+                        {% else %}
+                            <li class="alignable pull-left nav-list"><a href="{{ href }}">{{ x.name }}</a>
+                        {% endif %}
+                        {% if forloop.last == false %}
+                            /
+                        {% endif %}
+                            </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div style="clear:both"></div>
         </div>
-        <div style="clear:both"></div>
         <hr>
         {% if page.is_contact == true %}
             <div class="container content contact">
@@ -99,5 +101,8 @@
                 {% endif %}
             </div>
     </div>
+    {% if site.header_shader and page.header_shader != false %}
+        {% include header-shader.html %}
+    {% endif %}
 </body>
 </html>
