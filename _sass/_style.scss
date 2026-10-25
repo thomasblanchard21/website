@@ -72,6 +72,16 @@ hr {
     min-height: 100%;
 }
 
+/* Footer */
+
+.site-footer {
+    text-align: center;
+    margin-bottom: 10px;
+    a {
+        color: $footer-color;
+    }
+}
+
 /* Institute Image */
 
 #ins-logo {

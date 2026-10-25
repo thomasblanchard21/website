@@ -1,11 +1,12 @@
-title: Researcher
-url: "https://ankitsultana.com"
-baseurl: "/researcher"
+title: Thomas Blanchard
+author: Thomas Blanchard
+# TODO(thomas): one-sentence description used in search results and link previews
+description: ""
+url: "https://thomasblanchard21.github.io"
+baseurl: ""
 
 markdown: kramdown
-#ins_logo: "./bits-logo.png"
-
-tracking_id: #
+#ins_logo: "/bits-logo.png"
 
 footer: yes
 footer_url: "https://github.com/ankitsultana"
@@ -17,8 +18,8 @@ sass:
 
 nav:
  - name: "About"
-   link: "/researcher/"
+   link: "/"
  - name: "Resume"
-   link: "resume.pdf"
+   link: "/resume.pdf"
  - name: "Contact"
-   link: "contact"
+   link: "/contact"
