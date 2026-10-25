@@ -48,6 +48,8 @@
             margin: 0;
         }
         @media (max-width: $small-width) {
+            height: $image-size-small;
+            width: $image-size-small;
             img {
                 margin-top: -5px;
             }
