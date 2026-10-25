@@ -20,7 +20,7 @@ const fragmentShader = /* glsl */ `
 
     void main() {
         vec2 p = vUv * vec2(uResolution.x / uResolution.y, 1.0);
-        float t = uTime * 0.2;
+        float t = uTime * 0.6;
 
         // Sum of drifting sine waves, remapped to 0..1.
         float v = sin(p.x * 2.0 + t);
