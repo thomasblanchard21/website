@@ -9,17 +9,23 @@ markdown: kramdown
 #ins_logo: "/bits-logo.png"
 
 footer: yes
-footer_url: "https://github.com/ankitsultana"
-footer_text: "Page design by Ankit Sultana"
+source_url: "https://github.com/thomasblanchard21/website"
+template_url: "https://github.com/ankitsultana/researcher"
+template_author: "Ankit Sultana"
+template_author_url: "https://github.com/ankitsultana"
 
 sass:
     style: compressed
     sass_dir: _sass
 
 nav:
- - name: "About"
+ - name: "Home"
    link: "/"
- - name: "Resume"
-   link: "/resume.pdf"
+ - name: "Projects"
+   link: "/projects"
+ - name: "Research"
+   link: "/research"
+ - name: "Publications"
+   link: "/publications"
  - name: "Contact"
    link: "/contact"
