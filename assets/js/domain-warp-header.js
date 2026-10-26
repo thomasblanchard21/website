@@ -49,7 +49,8 @@ const CONFIG = {
     albedo: [0.975, 0.985, 0.995],
     sunColor: [1.0, 0.99, 0.97],
     ambientColor: [0.90, 0.93, 0.96],
-    seed: [3.7, 11.3],      // shifts the pattern
+    seed: null,             // [x, y] shifts the pattern; null picks a random one per page load
+    seedRange: 20.0,        // random seeds fall in [0, seedRange); kept small for mediump GPUs
     frozenTime: 12.0,       // time used for the single frame under reduced motion
     // Performance
     maxDpr: 2,              // device pixel ratio cap
@@ -58,6 +59,8 @@ const CONFIG = {
     minScale: 0.75,         // ...but never render below this fraction of CSS px
     maxFps: 30,
 };
+
+const SEED = CONFIG.seed || [Math.random() * CONFIG.seedRange, Math.random() * CONFIG.seedRange];
 
 const VERT = `
 attribute vec2 aPos;
@@ -374,7 +377,7 @@ function createRenderer(canvas) {
         gl.uniform1f(u.uWarp, CONFIG.warp);
         gl.uniform1f(u.uContrast, CONFIG.contrast);
         gl.uniform1f(u.uTime, time * CONFIG.flowSpeed);
-        gl.uniform2f(u.uSeed, CONFIG.seed[0], CONFIG.seed[1]);
+        gl.uniform2f(u.uSeed, SEED[0], SEED[1]);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
 
         // Pass 2: shading to the canvas.
