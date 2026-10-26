@@ -1,8 +1,9 @@
 /*
  * Domain-warp header relief
  *
- * Draws a slowly flowing, pale "sculpted plaster" relief behind the header
- * banner, seen straight from above under a low raking light.
+ * Draws a slowly flowing, pale "sculpted plaster" relief behind the whole
+ * page (a fixed, viewport-sized canvas), seen straight from above under a
+ * low raking light.
  *
  * Technique (written from scratch for this site):
  *   1. Height pass: a domain-warped fBm heightfield, f(p) = fbm(p + k*r),
@@ -19,12 +20,13 @@
  *
  * Raw WebGL 1, no dependencies. Progressive enhancement: if anything is
  * missing (WebGL, a shader compile), the canvas stays transparent and the
- * CSS fallback background of .banner shows through.
+ * CSS fallback background of the page shows through.
  */
 
-// Tweakable look. World units: the banner height spans `scale` units.
+// Tweakable look. World units: `referenceHeight` CSS px span `scale` units.
 const CONFIG = {
     scale: 0.8,             // zoom: larger = more, smaller features
+    referenceHeight: 300,   // CSS px, so the feature size doesn't depend on the viewport
     warp: 1.0,              // domain warp strength (k above)
     contrast: 2.3,          // spread of the raw fBm height around 0.5
     flowSpeed: 0.03,        // animation speed (world units per second, roughly)
@@ -55,7 +57,7 @@ const CONFIG = {
     seedRange: 20.0,        // random seeds fall in [0, seedRange); kept small for mediump GPUs
     frozenTime: 12.0,       // time used for the single frame under reduced motion
     // Mouse hover: the relief sinks around the cursor (off under reduced motion)
-    hoverRadius: 0.2,       // radius of the dip in world units (banner height = `scale`)
+    hoverRadius: 0.2,       // radius of the dip in world units
     hoverDepth: 0.45,       // how far the height drops at the centre (height range is 0..1)
     hoverFollow: 8.0,       // how fast the dip follows the cursor (per second)
     hoverFade: 4.0,         // how fast the dip appears/disappears (per second)
@@ -356,13 +358,16 @@ function createRenderer(canvas) {
     let pad = 0;
     let texW = 0;
     let texH = 0;
+    let worldH = CONFIG.scale;
 
-    function resize(w, h) {
+    // w, h: canvas size in px; viewH: world units spanned by the canvas height.
+    function resize(w, h, viewH) {
         width = w;
         height = h;
         canvas.width = w;
         canvas.height = h;
-        const texel = CONFIG.scale / h;
+        worldH = viewH;
+        const texel = worldH / h;
         pad = Math.ceil(CONFIG.shadowLength / texel) + 10;
         texW = w + 2 * pad;
         texH = h + 2 * pad;
@@ -378,7 +383,7 @@ function createRenderer(canvas) {
     }
 
     function render(time, mouse) {
-        const texel = CONFIG.scale / height;
+        const texel = worldH / height;
 
         // Pass 1: heightfield into the texture (with margin).
         gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
@@ -387,12 +392,12 @@ function createRenderer(canvas) {
         gl.useProgram(heightProg.program);
         gl.uniform2f(u.uPad, pad, pad);
         gl.uniform1f(u.uViewH, height);
-        gl.uniform1f(u.uScale, CONFIG.scale);
+        gl.uniform1f(u.uScale, worldH);
         gl.uniform1f(u.uWarp, CONFIG.warp);
         gl.uniform1f(u.uContrast, CONFIG.contrast);
         gl.uniform1f(u.uTime, time * CONFIG.flowSpeed);
         gl.uniform2f(u.uSeed, SEED[0], SEED[1]);
-        gl.uniform3f(u.uMouse, mouse.x * CONFIG.scale, mouse.y * CONFIG.scale, mouse.strength);
+        gl.uniform3f(u.uMouse, mouse.x * worldH, mouse.y * worldH, mouse.strength);
         gl.uniform1f(u.uHoverRadius, CONFIG.hoverRadius);
         gl.uniform1f(u.uHoverDepth, CONFIG.hoverDepth);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -448,7 +453,6 @@ function createRenderer(canvas) {
 }
 
 function mount(canvas) {
-    const banner = canvas.parentElement;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     let renderer = null;
@@ -456,8 +460,8 @@ function mount(canvas) {
     let lastDraw = -Infinity;
     let onScreen = true;
     let started = performance.now();
-    let size = [0, 0];
-    // Cursor position in banner-height units, origin bottom-left (like gl_FragCoord).
+    let size = [0, 0, 0];
+    // Cursor position in canvas-height units, origin bottom-left (like gl_FragCoord).
     const pointer = { x: 0, y: 0, inside: false };
     const mouse = { x: 0, y: 0, strength: 0 };
     let lastMouseUpdate = 0;
@@ -470,14 +474,18 @@ function mount(canvas) {
         if (area > CONFIG.maxPixels) {
             scale = Math.max(scale * Math.sqrt(CONFIG.maxPixels / area), Math.min(scale, CONFIG.minScale));
         }
-        return [Math.max(1, Math.round(rect.width * scale)), Math.max(1, Math.round(rect.height * scale))];
+        return [
+            Math.max(1, Math.round(rect.width * scale)),
+            Math.max(1, Math.round(rect.height * scale)),
+            CONFIG.scale * rect.height / CONFIG.referenceHeight,
+        ];
     }
 
     function draw(now) {
-        const [w, h] = canvasSize();
-        if (w !== size[0] || h !== size[1]) {
-            renderer.resize(w, h);
-            size = [w, h];
+        const [w, h, viewH] = canvasSize();
+        if (w !== size[0] || h !== size[1] || viewH !== size[2]) {
+            renderer.resize(w, h, viewH);
+            size = [w, h, viewH];
         }
         const t = reducedMotion.matches ? CONFIG.frozenTime : CONFIG.frozenTime + (now - started) / 1000;
         updateMouse(now);
@@ -545,7 +553,7 @@ function mount(canvas) {
         } catch (err) {
             renderer = null;
         }
-        size = [0, 0];
+        size = [0, 0, 0];
         if (!renderer) {
             canvas.classList.remove("is-ready");
             return;
@@ -568,7 +576,7 @@ function mount(canvas) {
         onScreen = entries[entries.length - 1].isIntersecting;
         update();
     });
-    io.observe(banner);
+    io.observe(canvas);
 
     const ro = new ResizeObserver(() => {
         if (renderer && !frame) {
@@ -616,8 +624,8 @@ function mount(canvas) {
         }
     };
 
-    banner.addEventListener("pointermove", onPointerMove);
-    banner.addEventListener("pointerleave", onPointerLeave);
+    document.addEventListener("pointermove", onPointerMove);
+    document.documentElement.addEventListener("pointerleave", onPointerLeave);
     document.addEventListener("visibilitychange", onVisibility);
     reducedMotion.addEventListener("change", onMotionChange);
     canvas.addEventListener("webglcontextlost", onContextLost);
@@ -629,8 +637,8 @@ function mount(canvas) {
         stop();
         io.disconnect();
         ro.disconnect();
-        banner.removeEventListener("pointermove", onPointerMove);
-        banner.removeEventListener("pointerleave", onPointerLeave);
+        document.removeEventListener("pointermove", onPointerMove);
+        document.documentElement.removeEventListener("pointerleave", onPointerLeave);
         document.removeEventListener("visibilitychange", onVisibility);
         reducedMotion.removeEventListener("change", onMotionChange);
         canvas.removeEventListener("webglcontextlost", onContextLost);
