@@ -23,21 +23,23 @@
 // Tweakable look. World units: the banner height spans `scale` units.
 const CONFIG = {
     scale: 0.8,             // zoom: larger = more, smaller features
-    warp: 1.3,              // domain warp strength (k above)
-    contrast: 2.0,          // spread of the raw fBm height around 0.5
+    warp: 1.0,              // domain warp strength (k above)
+    contrast: 2.3,          // spread of the raw fBm height around 0.5
     flowSpeed: 0.03,        // animation speed (world units per second, roughly)
-    terraces: 24.0,         // number of layers over the full height range
-    terraceWidth: 0.45,     // width of the rounded step in each layer (0..1)
+    terraces: 11.0,         // number of layers over the full height range
+    terraceWidth: 0.58,     // width of the rounded step in each layer (0..1)
     terraceSlope: 0.35,     // how much of the raw slope survives on the plateaus
-    depth: 0.11,            // relief depth in world units (stronger shading/shadows)
+    depth: 0.18,            // relief depth in world units (stronger shading/shadows)
     lightAzimuth: 145,      // degrees, 0 = from the right, 90 = from the top
     lightElevation: 35,     // degrees above the horizon (low = raking light)
-    shadowLength: 0.055,    // max shadow march distance in world units
-    shadowSoftness: 2.8,    // higher = harder shadow edges
+    shadowLength: 0.09,     // max shadow march distance in world units
+    shadowSoftness: 2.0,    // higher = harder shadow edges
     ambient: 0.84,          // sky/ambient light intensity
     sun: 0.52,              // directional light intensity
-    volume: 0.55,           // blend of a wide-stencil normal into the diffuse (dome shading)
-    volumeRadius: 10.0,     // wide-stencil radius in texels
+    volume: 0.8,            // blend of a wide-stencil normal into the diffuse (dome shading)
+    volumeRadius: 16.0,     // wide-stencil radius in texels
+    ringInner: 5.0,         // cavity sample radii in texels
+    ringOuter: 14.0,
     occlusion: 1.2,         // strength of the cavity/occlusion darkening
     occlusionFloor: 0.78,   // darkest the occlusion term can get (0..1)
     shadowFloor: 0.55,      // how much sun still reaches shadowed areas (0..1)
@@ -163,6 +165,8 @@ uniform float uShadowFloor;
 uniform float uSheen;
 uniform float uSheenPower;
 uniform float uVolume;
+uniform float uRingInner;
+uniform float uRingOuter;
 uniform float uVolumeRadius;
 uniform float uLayerTint;
 uniform vec3 uAlbedo;
@@ -233,7 +237,7 @@ void main() {
     float ring = 0.0;
     for (int i = 0; i < 8; i++) {
         float a = float(i) * 0.7853982 + 0.3;
-        float rad = (i < 4) ? 3.0 : 9.0;
+        float rad = (i < 4) ? uRingInner : uRingOuter;
         ring += height(px + vec2(cos(a), sin(a)) * rad);
     }
     ring /= 8.0;
@@ -399,6 +403,8 @@ function createRenderer(canvas) {
         gl.uniform1f(u.uSheen, CONFIG.sheen);
         gl.uniform1f(u.uSheenPower, CONFIG.sheenPower);
         gl.uniform1f(u.uVolume, CONFIG.volume);
+        gl.uniform1f(u.uRingInner, CONFIG.ringInner);
+        gl.uniform1f(u.uRingOuter, CONFIG.ringOuter);
         gl.uniform1f(u.uVolumeRadius, CONFIG.volumeRadius);
         gl.uniform1f(u.uLayerTint, CONFIG.layerTint);
         gl.uniform3fv(u.uAlbedo, CONFIG.albedo);
