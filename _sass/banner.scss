@@ -16,24 +16,35 @@
     height: $banner-height;
     overflow: hidden;
     margin-bottom: 30px;
-    background-color: $banner-fallback-light;
-    background-image:
-        radial-gradient(ellipse at 20% 30%, $banner-fallback-light 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 75%, $banner-fallback-dark 0%, transparent 65%),
-        linear-gradient(160deg, $banner-fallback-light 0%, $banner-fallback-dark 100%);
-    border-bottom: 1px solid $banner-border;
 }
 
+// The fallback gradient and the canvas both fade out towards the bottom,
+// so the banner melts into the white page instead of ending on an edge.
+.banner::before,
 .banner-canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    -webkit-mask-image: linear-gradient(to bottom, #000 $banner-fade-start, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 $banner-fade-start, transparent 100%);
+    pointer-events: none;
+}
+
+.banner::before {
+    content: "";
+    background-color: $banner-fallback-light;
+    background-image:
+        radial-gradient(ellipse at 20% 30%, $banner-fallback-light 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 75%, $banner-fallback-dark 0%, transparent 65%),
+        linear-gradient(160deg, $banner-fallback-light 0%, $banner-fallback-dark 100%);
+}
+
+.banner-canvas {
     display: block;
     opacity: 0;
     transition: opacity 0.8s ease;
-    pointer-events: none;
     &.is-ready {
         opacity: 1;
     }
@@ -49,54 +60,11 @@
     display: flow-root;
 }
 
-.banner #author-name,
-.banner #navlist {
-    background: $banner-scrim;
-    -webkit-backdrop-filter: blur($banner-scrim-blur);
-    backdrop-filter: blur($banner-scrim-blur);
-    border: 1px solid $banner-scrim-edge;
-    border-radius: 4px;
-    box-shadow: $banner-scrim-shadow;
-}
-
-.banner #author-name {
-    color: $banner-text;
-    padding: 2px 10px;
-    margin-left: -10px;
-}
-
-.banner #navlist {
-    color: $banner-text;
-    padding: 6px 10px;
-    margin-right: -10px;
-    a {
-        color: $banner-text;
-    }
-    a:hover,
-    a:focus {
-        color: $banner-link-hover;
-    }
-}
-
 @media (max-width: 500px) {
     .banner {
         height: $banner-height-small;
     }
     .banner .navbar {
         padding: 0;
-    }
-    .banner #author-name {
-        display: table;
-        width: auto;
-        margin: 0 auto 12px auto;
-    }
-    .banner #navlist {
-        display: table;
-        width: auto;
-        margin: 0 auto;
-        padding: 6px 10px;
-    }
-    .banner #navlist li.nav-list {
-        margin: 0 3px;
     }
 }
