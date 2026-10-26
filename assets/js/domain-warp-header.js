@@ -11,6 +11,8 @@
  *      with the height packed into two channels (16-bit precision). The
  *      texture has a margin around the visible area so shadows near the edges
  *      can still find their occluders.
+ *      The mouse presses a smooth dip into the height there, so the
+ *      layers around the cursor step down.
  *   2. Shade pass: the height is softly terraced into rounded layers, normals
  *      come from finite differences, a short march toward the light gives soft
  *      shadows, and a ring of samples gives a cavity/occlusion term.
@@ -52,6 +54,11 @@ const CONFIG = {
     seed: null,             // [x, y] shifts the pattern; null picks a random one per page load
     seedRange: 20.0,        // random seeds fall in [0, seedRange); kept small for mediump GPUs
     frozenTime: 12.0,       // time used for the single frame under reduced motion
+    // Mouse hover: the relief sinks around the cursor (off under reduced motion)
+    hoverRadius: 0.2,       // radius of the dip in world units (banner height = `scale`)
+    hoverDepth: 0.45,       // how far the height drops at the centre (height range is 0..1)
+    hoverFollow: 8.0,       // how fast the dip follows the cursor (per second)
+    hoverFade: 4.0,         // how fast the dip appears/disappears (per second)
     // Performance
     maxDpr: 2,              // device pixel ratio cap
     renderScale: 0.75,      // internal resolution relative to CSS px * DPR
@@ -85,6 +92,9 @@ uniform float uWarp;
 uniform float uContrast;
 uniform float uTime;
 uniform vec2 uSeed;
+uniform vec3 uMouse;     // xy: cursor in world units (no seed), z: dip strength 0..1
+uniform float uHoverRadius;
+uniform float uHoverDepth;
 
 // Gradient noise with a cheap arithmetic hash.
 vec2 grad(vec2 c) {
@@ -132,7 +142,8 @@ float fbmLow(vec2 p) {
 }
 
 void main() {
-    vec2 p = (gl_FragCoord.xy - uPad) / uViewH * uScale + uSeed;
+    vec2 pv = (gl_FragCoord.xy - uPad) / uViewH * uScale;
+    vec2 p = pv + uSeed;
     float t = uTime;
 
     vec2 q = vec2(fbmLow(p + vec2(0.0, 0.0) + t * vec2(0.6, 0.2)),
@@ -141,7 +152,10 @@ void main() {
                   fbmLow(p + uWarp * q + vec2(8.3, 2.8) - t * vec2(0.5, 0.8)));
     float f = fbm(p + uWarp * r);
 
-    float h = clamp(0.5 + uContrast * f, 0.0, 0.9999);
+    vec2 dm = (pv - uMouse.xy) / uHoverRadius;
+    float dip = uMouse.z * exp(-dot(dm, dm));
+
+    float h = clamp(0.5 + uContrast * f - uHoverDepth * dip, 0.0, 0.9999);
     float hi = floor(h * 255.0);
     float lo = h * 255.0 - hi;
     gl_FragColor = vec4(hi / 255.0, lo, 0.0, 1.0);
@@ -363,7 +377,7 @@ function createRenderer(canvas) {
         }
     }
 
-    function render(time) {
+    function render(time, mouse) {
         const texel = CONFIG.scale / height;
 
         // Pass 1: heightfield into the texture (with margin).
@@ -378,6 +392,9 @@ function createRenderer(canvas) {
         gl.uniform1f(u.uContrast, CONFIG.contrast);
         gl.uniform1f(u.uTime, time * CONFIG.flowSpeed);
         gl.uniform2f(u.uSeed, SEED[0], SEED[1]);
+        gl.uniform3f(u.uMouse, mouse.x * CONFIG.scale, mouse.y * CONFIG.scale, mouse.strength);
+        gl.uniform1f(u.uHoverRadius, CONFIG.hoverRadius);
+        gl.uniform1f(u.uHoverDepth, CONFIG.hoverDepth);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
 
         // Pass 2: shading to the canvas.
@@ -440,6 +457,10 @@ function mount(canvas) {
     let onScreen = true;
     let started = performance.now();
     let size = [0, 0];
+    // Cursor position in banner-height units, origin bottom-left (like gl_FragCoord).
+    const pointer = { x: 0, y: 0, inside: false };
+    const mouse = { x: 0, y: 0, strength: 0 };
+    let lastMouseUpdate = 0;
 
     function canvasSize() {
         const rect = canvas.getBoundingClientRect();
@@ -459,8 +480,27 @@ function mount(canvas) {
             size = [w, h];
         }
         const t = reducedMotion.matches ? CONFIG.frozenTime : CONFIG.frozenTime + (now - started) / 1000;
-        renderer.render(t);
+        updateMouse(now);
+        renderer.render(t, mouse);
         canvas.classList.add("is-ready");
+    }
+
+    function updateMouse(now) {
+        const dt = Math.min((now - lastMouseUpdate) / 1000, 0.1);
+        lastMouseUpdate = now;
+        const target = pointer.inside && !reducedMotion.matches ? 1 : 0;
+        if (mouse.strength === 0 && target) {
+            // Appear where the cursor is instead of sliding in from elsewhere.
+            mouse.x = pointer.x;
+            mouse.y = pointer.y;
+        }
+        const follow = 1 - Math.exp(-CONFIG.hoverFollow * dt);
+        mouse.x += (pointer.x - mouse.x) * follow;
+        mouse.y += (pointer.y - mouse.y) * follow;
+        mouse.strength += (target - mouse.strength) * (1 - Math.exp(-CONFIG.hoverFade * dt));
+        if (mouse.strength < 0.001 && !target) {
+            mouse.strength = 0;
+        }
     }
 
     function tick(now) {
@@ -537,6 +577,20 @@ function mount(canvas) {
     });
     ro.observe(canvas);
 
+    const onPointerMove = (e) => {
+        // Mouse and pen only: a touch has no hover and would leave a stray dip.
+        if (e.pointerType === "touch") {
+            return;
+        }
+        const rect = canvas.getBoundingClientRect();
+        pointer.x = (e.clientX - rect.left) / rect.height;
+        pointer.y = (rect.bottom - e.clientY) / rect.height;
+        pointer.inside = true;
+    };
+    const onPointerLeave = () => {
+        pointer.inside = false;
+    };
+
     const onVisibility = () => update();
     const onMotionChange = () => update();
     const onContextLost = (e) => {
@@ -562,6 +616,8 @@ function mount(canvas) {
         }
     };
 
+    banner.addEventListener("pointermove", onPointerMove);
+    banner.addEventListener("pointerleave", onPointerLeave);
     document.addEventListener("visibilitychange", onVisibility);
     reducedMotion.addEventListener("change", onMotionChange);
     canvas.addEventListener("webglcontextlost", onContextLost);
@@ -573,6 +629,8 @@ function mount(canvas) {
         stop();
         io.disconnect();
         ro.disconnect();
+        banner.removeEventListener("pointermove", onPointerMove);
+        banner.removeEventListener("pointerleave", onPointerLeave);
         document.removeEventListener("visibilitychange", onVisibility);
         reducedMotion.removeEventListener("change", onMotionChange);
         canvas.removeEventListener("webglcontextlost", onContextLost);
