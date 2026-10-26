@@ -7,6 +7,19 @@ $image-size: 150px;
 $image-size-small: 110px;
 $footer-color: black;
 
+// Header banner (domain-warp relief, see _sass/banner.scss)
+$banner-height: 300px;
+$banner-height-small: 260px;
+$banner-text: #1b1b1b;
+$banner-link-hover: $accent;
+// Static background shown without JS/WebGL, and under the canvas while it loads
+$banner-fallback-light: #f3f2ef;
+$banner-fallback-dark: #d9d8d4;
+// Translucent plate behind the title and nav, keeps them readable over the relief
+$banner-scrim: rgba(250, 249, 246, 0.62);
+$banner-scrim-blur: 4px;
+$banner-border: rgba(0, 0, 0, 0.08);
+
 /*
  * Build Variables, don't touch
  */
