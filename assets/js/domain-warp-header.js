@@ -22,31 +22,36 @@
 
 // Tweakable look. World units: the banner height spans `scale` units.
 const CONFIG = {
-    scale: 1.1,             // zoom: larger = more, smaller features
-    warp: 2.4,              // domain warp strength (k above)
-    contrast: 1.3,          // spread of the raw fBm height around 0.5
-    flowSpeed: 0.045,       // animation speed (world units per second, roughly)
-    terraces: 10.0,         // number of layers over the full height range
-    terraceWidth: 0.7,      // width of the rounded step in each layer (0..1)
-    terraceSlope: 0.15,     // how much of the raw slope survives on the plateaus
-    depth: 0.07,            // relief depth in world units (stronger shading/shadows)
+    scale: 0.8,             // zoom: larger = more, smaller features
+    warp: 1.5,              // domain warp strength (k above)
+    contrast: 1.5,          // spread of the raw fBm height around 0.5
+    flowSpeed: 0.03,        // animation speed (world units per second, roughly)
+    terraces: 20.0,         // number of layers over the full height range
+    terraceWidth: 0.45,     // width of the rounded step in each layer (0..1)
+    terraceSlope: 0.25,     // how much of the raw slope survives on the plateaus
+    depth: 0.11,            // relief depth in world units (stronger shading/shadows)
     lightAzimuth: 145,      // degrees, 0 = from the right, 90 = from the top
-    lightElevation: 24,     // degrees above the horizon (low = raking light)
-    shadowLength: 0.12,     // max shadow march distance in world units
-    shadowSoftness: 6.0,    // higher = harder shadow edges
-    ambient: 0.62,          // sky/ambient light intensity
-    sun: 0.70,              // directional light intensity
+    lightElevation: 35,     // degrees above the horizon (low = raking light)
+    shadowLength: 0.055,    // max shadow march distance in world units
+    shadowSoftness: 2.8,    // higher = harder shadow edges
+    ambient: 0.84,          // sky/ambient light intensity
+    sun: 0.52,              // directional light intensity
     occlusion: 1.2,         // strength of the cavity/occlusion darkening
+    occlusionFloor: 0.78,   // darkest the occlusion term can get (0..1)
+    shadowFloor: 0.55,      // how much sun still reaches shadowed areas (0..1)
+    sheen: 0.15,            // strength of the broad satin specular
+    sheenPower: 20.0,       // specular exponent (lower = broader)
     layerTint: 0.035,       // per-layer albedo variation (subtle strata)
-    albedo: [0.985, 0.98, 0.97],
-    sunColor: [1.0, 0.985, 0.96],
-    ambientColor: [0.90, 0.92, 0.96],
+    albedo: [0.975, 0.985, 0.995],
+    sunColor: [1.0, 0.99, 0.97],
+    ambientColor: [0.88, 0.93, 0.97],
     seed: [3.7, 11.3],      // shifts the pattern
     frozenTime: 12.0,       // time used for the single frame under reduced motion
     // Performance
     maxDpr: 2,              // device pixel ratio cap
     renderScale: 0.75,      // internal resolution relative to CSS px * DPR
-    maxPixels: 1000000,     // hard cap on rendered pixels per frame
+    maxPixels: 1600000,     // pixel budget per frame...
+    minScale: 0.75,         // ...but never render below this fraction of CSS px
     maxFps: 30,
 };
 
@@ -102,7 +107,7 @@ float fbm(vec2 p) {
     for (int i = 0; i < 4; i++) {
         s += a * noise(p);
         p = ROT * p + vec2(7.31, 2.17);
-        a *= 0.42;
+        a *= (i < 2) ? 0.42 : 0.3;
     }
     return s;
 }
@@ -151,6 +156,10 @@ uniform float uShadowSoftness;
 uniform float uAmbient;
 uniform float uSun;
 uniform float uOcclusion;
+uniform float uOcclusionFloor;
+uniform float uShadowFloor;
+uniform float uSheen;
+uniform float uSheenPower;
 uniform float uLayerTint;
 uniform vec3 uAlbedo;
 uniform vec3 uSunColor;
@@ -193,10 +202,12 @@ void main() {
     // Soft shadow: march toward the light across the heightfield.
     vec2 dir = normalize(uLight.xy);
     float tanE = uLight.z / length(uLight.xy);
+    // Evenly spaced samples, start jittered per pixel to avoid banding.
+    float jitter = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
     float shadow = 1.0;
-    for (int i = 1; i <= 16; i++) {
-        float k = float(i) / 16.0;
-        float d = 1.0 + k * k * (uShadowTexels - 1.0);
+    for (int i = 0; i < 16; i++) {
+        float k = (float(i) + jitter) / 16.0;
+        float d = max(1.0, k * uShadowTexels);
         float dw = d * uTexel;
         float ray = h0 + dw * tanE;
         float hs = height(px + dir * d);
@@ -213,14 +224,19 @@ void main() {
     }
     ring /= 8.0;
     float occ = clamp(1.0 - uOcclusion * max(ring - h0, 0.0) / uDepth * uTerraces * 0.25, 0.0, 1.0);
-    occ = mix(0.55, 1.0, occ);
+    occ = mix(uOcclusionFloor, 1.0, occ);
 
     float diff = max(dot(n, uLight), 0.0);
     float sky = 0.75 + 0.25 * n.z;
 
     vec3 albedo = uAlbedo * (1.0 - uLayerTint * fract(level * 0.618034));
-    vec3 light = uAmbientColor * (uAmbient * sky * occ) + uSunColor * (uSun * diff * shadow);
+    float sunVis = mix(uShadowFloor, 1.0, shadow);
+    vec3 light = uAmbientColor * (uAmbient * sky * occ) + uSunColor * (uSun * diff * sunVis);
     vec3 col = albedo * light;
+
+    // Broad satin sheen, viewed straight down.
+    vec3 hv = normalize(uLight + vec3(0.0, 0.0, 1.0));
+    col += uSunColor * (uSheen * pow(max(dot(n, hv), 0.0), uSheenPower) * shadow);
 
     // Gentle highlight roll-off instead of a hard clip.
     col = col / (1.0 + 0.18 * max(col - 0.85, 0.0) * 4.0);
@@ -364,6 +380,10 @@ function createRenderer(canvas) {
         gl.uniform1f(u.uAmbient, CONFIG.ambient);
         gl.uniform1f(u.uSun, CONFIG.sun);
         gl.uniform1f(u.uOcclusion, CONFIG.occlusion);
+        gl.uniform1f(u.uOcclusionFloor, CONFIG.occlusionFloor);
+        gl.uniform1f(u.uShadowFloor, CONFIG.shadowFloor);
+        gl.uniform1f(u.uSheen, CONFIG.sheen);
+        gl.uniform1f(u.uSheenPower, CONFIG.sheenPower);
         gl.uniform1f(u.uLayerTint, CONFIG.layerTint);
         gl.uniform3fv(u.uAlbedo, CONFIG.albedo);
         gl.uniform3fv(u.uSunColor, CONFIG.sunColor);
@@ -402,7 +422,7 @@ function mount(canvas) {
         let scale = dpr * CONFIG.renderScale;
         const area = rect.width * rect.height * scale * scale;
         if (area > CONFIG.maxPixels) {
-            scale *= Math.sqrt(CONFIG.maxPixels / area);
+            scale = Math.max(scale * Math.sqrt(CONFIG.maxPixels / area), Math.min(scale, CONFIG.minScale));
         }
         return [Math.max(1, Math.round(rect.width * scale)), Math.max(1, Math.round(rect.height * scale))];
     }
