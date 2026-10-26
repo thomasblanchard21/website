@@ -7,6 +7,15 @@ $image-size: 150px;
 $image-size-small: 110px;
 $footer-color: black;
 
+// Header banner (domain-warp relief, see _sass/banner.scss)
+$banner-height: 300px;
+$banner-height-small: 260px;
+// Where the banner starts fading into the white page (fully faded at the bottom)
+$banner-fade-start: 45%;
+// Static background shown without JS/WebGL, and under the canvas while it loads
+$banner-fallback-light: #f3f2ef;
+$banner-fallback-dark: #d9d8d4;
+
 /*
  * Build Variables, don't touch
  */

@@ -9,6 +9,10 @@ markdown: kramdown
 #ins_logo: "/bits-logo.png"
 
 footer: yes
+
+# Animated WebGL relief behind the header banner (assets/js/domain-warp-header.js).
+# A page can override it with `header_effect: false` in its front matter.
+header_effect: true
 source_url: "https://github.com/thomasblanchard21/website"
 template_url: "https://github.com/ankitsultana/researcher"
 template_author: "Ankit Sultana"
