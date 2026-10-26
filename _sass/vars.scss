@@ -16,7 +16,9 @@ $banner-link-hover: $accent;
 $banner-fallback-light: #f3f2ef;
 $banner-fallback-dark: #d9d8d4;
 // Translucent plate behind the title and nav, keeps them readable over the relief
-$banner-scrim: rgba(250, 249, 246, 0.62);
+$banner-scrim: rgba(250, 250, 249, 0.78);
+$banner-scrim-edge: rgba(40, 55, 65, 0.10);
+$banner-scrim-shadow: 0 1px 6px rgba(40, 55, 65, 0.10);
 $banner-scrim-blur: 4px;
 $banner-border: rgba(0, 0, 0, 0.08);
 

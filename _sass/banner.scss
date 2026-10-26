@@ -54,7 +54,9 @@
     background: $banner-scrim;
     -webkit-backdrop-filter: blur($banner-scrim-blur);
     backdrop-filter: blur($banner-scrim-blur);
+    border: 1px solid $banner-scrim-edge;
     border-radius: 4px;
+    box-shadow: $banner-scrim-shadow;
 }
 
 .banner #author-name {

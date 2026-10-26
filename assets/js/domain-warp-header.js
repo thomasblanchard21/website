@@ -23,12 +23,12 @@
 // Tweakable look. World units: the banner height spans `scale` units.
 const CONFIG = {
     scale: 0.8,             // zoom: larger = more, smaller features
-    warp: 1.5,              // domain warp strength (k above)
-    contrast: 1.5,          // spread of the raw fBm height around 0.5
+    warp: 1.3,              // domain warp strength (k above)
+    contrast: 2.0,          // spread of the raw fBm height around 0.5
     flowSpeed: 0.03,        // animation speed (world units per second, roughly)
-    terraces: 20.0,         // number of layers over the full height range
+    terraces: 24.0,         // number of layers over the full height range
     terraceWidth: 0.45,     // width of the rounded step in each layer (0..1)
-    terraceSlope: 0.25,     // how much of the raw slope survives on the plateaus
+    terraceSlope: 0.35,     // how much of the raw slope survives on the plateaus
     depth: 0.11,            // relief depth in world units (stronger shading/shadows)
     lightAzimuth: 145,      // degrees, 0 = from the right, 90 = from the top
     lightElevation: 35,     // degrees above the horizon (low = raking light)
@@ -36,6 +36,8 @@ const CONFIG = {
     shadowSoftness: 2.8,    // higher = harder shadow edges
     ambient: 0.84,          // sky/ambient light intensity
     sun: 0.52,              // directional light intensity
+    volume: 0.55,           // blend of a wide-stencil normal into the diffuse (dome shading)
+    volumeRadius: 10.0,     // wide-stencil radius in texels
     occlusion: 1.2,         // strength of the cavity/occlusion darkening
     occlusionFloor: 0.78,   // darkest the occlusion term can get (0..1)
     shadowFloor: 0.55,      // how much sun still reaches shadowed areas (0..1)
@@ -44,7 +46,7 @@ const CONFIG = {
     layerTint: 0.035,       // per-layer albedo variation (subtle strata)
     albedo: [0.975, 0.985, 0.995],
     sunColor: [1.0, 0.99, 0.97],
-    ambientColor: [0.88, 0.93, 0.97],
+    ambientColor: [0.90, 0.93, 0.96],
     seed: [3.7, 11.3],      // shifts the pattern
     frozenTime: 12.0,       // time used for the single frame under reduced motion
     // Performance
@@ -160,6 +162,8 @@ uniform float uOcclusionFloor;
 uniform float uShadowFloor;
 uniform float uSheen;
 uniform float uSheenPower;
+uniform float uVolume;
+uniform float uVolumeRadius;
 uniform float uLayerTint;
 uniform vec3 uAlbedo;
 uniform vec3 uSunColor;
@@ -199,6 +203,16 @@ void main() {
     float hu = height(px + vec2(0.0, 1.0));
     vec3 n = normalize(vec3((hl - hr) / (2.0 * uTexel), (hd - hu) / (2.0 * uTexel), 1.0));
 
+    // Wider stencil on the un-terraced height: large-scale slope, so
+    // lobes read as rounded domes.
+    float rw = uVolumeRadius;
+    float wl = rawHeight(px - vec2(rw, 0.0)) * uDepth;
+    float wr = rawHeight(px + vec2(rw, 0.0)) * uDepth;
+    float wd = rawHeight(px - vec2(0.0, rw)) * uDepth;
+    float wu = rawHeight(px + vec2(0.0, rw)) * uDepth;
+    vec3 nWide = normalize(vec3((wl - wr) / (2.0 * rw * uTexel), (wd - wu) / (2.0 * rw * uTexel), 1.0));
+    vec3 nDiff = normalize(mix(n, nWide, uVolume));
+
     // Soft shadow: march toward the light across the heightfield.
     vec2 dir = normalize(uLight.xy);
     float tanE = uLight.z / length(uLight.xy);
@@ -226,7 +240,7 @@ void main() {
     float occ = clamp(1.0 - uOcclusion * max(ring - h0, 0.0) / uDepth * uTerraces * 0.25, 0.0, 1.0);
     occ = mix(uOcclusionFloor, 1.0, occ);
 
-    float diff = max(dot(n, uLight), 0.0);
+    float diff = max(dot(nDiff, uLight), 0.0);
     float sky = 0.75 + 0.25 * n.z;
 
     vec3 albedo = uAlbedo * (1.0 - uLayerTint * fract(level * 0.618034));
@@ -384,6 +398,8 @@ function createRenderer(canvas) {
         gl.uniform1f(u.uShadowFloor, CONFIG.shadowFloor);
         gl.uniform1f(u.uSheen, CONFIG.sheen);
         gl.uniform1f(u.uSheenPower, CONFIG.sheenPower);
+        gl.uniform1f(u.uVolume, CONFIG.volume);
+        gl.uniform1f(u.uVolumeRadius, CONFIG.volumeRadius);
         gl.uniform1f(u.uLayerTint, CONFIG.layerTint);
         gl.uniform3fv(u.uAlbedo, CONFIG.albedo);
         gl.uniform3fv(u.uSunColor, CONFIG.sunColor);
