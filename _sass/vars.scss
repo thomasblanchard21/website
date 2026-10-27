@@ -18,6 +18,10 @@ $relief-fallback-dark: #d9d8d4;
 $content-veil: rgba(255, 255, 255, 0.85);
 $content-padding: 30px;
 $content-padding-small: 16px;
+// Round button pausing the relief animation (bottom-right corner)
+$relief-toggle-size: 36px;
+$relief-toggle-size-small: 32px;
+$relief-toggle-color: #272727;
 
 // Slim nav bar pinned at the top once the banner is scrolled away (see _sass/sticky-bar.scss)
 $sticky-bar-height: 48px;
