@@ -94,17 +94,14 @@ hr {
 
 /* Mobile */
 
-@media (max-width: 800px) {
+// Below this width the container shrinks fluidly instead of jumping to a fixed size
+@media (max-width: $max-width / 0.83) {
     .container {
-        max-width: $med-width;
-        transition: 0.3s ease all;
+        max-width: 83%;
     }
 }
 
 @media (max-width: 650px) {
-    .container {
-        max-width: 83%;
-    }
     .navbar-ul {
         margin-top: 5px;
     }
