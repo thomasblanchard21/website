@@ -1,0 +1,103 @@
+@import "vars";
+
+/*
+ * One-page navigation
+ *
+ * The nav links scroll to the section headings of index.md. Once the banner has
+ * scrolled out of view, assets/js/sticky-nav.js shows a slim bar with the
+ * site name and the links at the top (.is-visible) and marks the link of the
+ * section being read (.is-current). Without JS the bar stays hidden and the
+ * links still jump to the sections.
+ */
+
+html {
+    // Keep section headings clear of the bar when jumping to them.
+    scroll-padding-top: $sticky-bar-height + 10px;
+    @media (prefers-reduced-motion: no-preference) {
+        scroll-behavior: smooth;
+    }
+}
+
+// Space between sections; the first heading stays close to the banner.
+.content > h2:not(:first-child) {
+    margin-top: $section-spacing;
+}
+
+.sticky-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background-color: $sticky-bar-background;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+    &.is-visible {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.25s ease;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+        &.is-visible {
+            transition: none;
+        }
+    }
+}
+
+.sticky-bar-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    min-height: $sticky-bar-height;
+}
+
+.sticky-bar-name {
+    font-size: 20px;
+    color: #272727;
+    margin-right: 20px;
+}
+
+.sticky-bar-links {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.sticky-bar-item {
+    display: inline;
+    margin: 0 5px 0 10px;
+}
+
+.sticky-bar .is-current {
+    text-decoration: underline;
+}
+
+@media (max-width: 500px) {
+    html {
+        // The bar wraps onto two or three lines here.
+        scroll-padding-top: $sticky-bar-height-small + 10px;
+    }
+    .content > h2:not(:first-child) {
+        margin-top: $section-spacing-small;
+    }
+    .sticky-bar-inner {
+        justify-content: center;
+        padding: 6px 0;
+    }
+    .sticky-bar-name {
+        font-size: 17px;
+        margin-right: 0;
+    }
+    .sticky-bar-links {
+        width: 100%;
+        text-align: center;
+        font-size: 14px;
+    }
+    .sticky-bar-item {
+        margin: 0 2px;
+    }
+}
