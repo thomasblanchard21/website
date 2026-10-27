@@ -61,11 +61,15 @@
     {% endif %}
 </head>
 <body>
+    {% if header_effect %}
+        <canvas class="relief-canvas" data-effect="domain-warp" aria-hidden="true"></canvas>
+        <button class="relief-toggle" type="button" role="switch" aria-checked="true" hidden>
+            <span class="relief-toggle-label">Animation</span>
+            <span class="relief-toggle-track" aria-hidden="true"><span class="relief-toggle-thumb"></span></span>
+        </button>
+    {% endif %}
     <div class="wrapper">
         <header class="banner">
-            {% if header_effect %}
-                <canvas class="banner-canvas" data-effect="domain-warp" aria-hidden="true"></canvas>
-            {% endif %}
             <div class="navbar container">
                 {% if site.ins_logo %}
                     <img id="ins-logo" src="{{ site.ins_logo | relative_url }}" alt="Institute logo" />
@@ -98,7 +102,7 @@
                         Based on the <a href="{{ site.template_url }}">researcher</a> template
                         by <a href="{{ site.template_author_url }}">{{ site.template_author }}</a> ·
                         {% if header_effect %}
-                            Header uses <a href="https://iquilezles.org/articles/warp/">domain warping</a>
+                            Background uses <a href="https://iquilezles.org/articles/warp/">domain warping</a>
                             by Inigo Quilez ·
                         {% endif %}
                         Last updated {{ site.time | date: "%B %-d, %Y" }}

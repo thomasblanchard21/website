@@ -1,48 +1,31 @@
 @import "vars";
 
 /*
- * Header banner
+ * Page background relief and header banner
  *
- * Full-width band at the top of every page holding the site name and nav.
- * Its background is a static pale gradient; when the header effect is on,
- * assets/js/domain-warp-header.js draws a WebGL relief into .banner-canvas
- * and fades it in (.is-ready) once the first frame is rendered.
+ * The background of the whole page is a static pale gradient; when the
+ * header effect is on, assets/js/domain-warp-header.js draws a WebGL relief
+ * into .relief-canvas, fixed behind the page, and fades it in (.is-ready)
+ * once the first frame is rendered.
  */
 
-.banner {
-    position: relative;
-    display: flex;
-    align-items: center;
-    height: $banner-height;
-    overflow: hidden;
-    margin-bottom: 30px;
+body {
+    background-color: $relief-fallback-light;
+    background-image:
+        radial-gradient(ellipse at 20% 30%, $relief-fallback-light 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 75%, $relief-fallback-dark 0%, transparent 65%),
+        linear-gradient(160deg, $relief-fallback-light 0%, $relief-fallback-dark 100%);
+    background-attachment: fixed;
 }
 
-// The fallback gradient and the canvas both fade out towards the bottom,
-// so the banner melts into the white page instead of ending on an edge.
-.banner::before,
-.banner-canvas {
-    position: absolute;
+.relief-canvas {
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    -webkit-mask-image: linear-gradient(to bottom, #000 $banner-fade-start, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 $banner-fade-start, transparent 100%);
-    pointer-events: none;
-}
-
-.banner::before {
-    content: "";
-    background-color: $banner-fallback-light;
-    background-image:
-        radial-gradient(ellipse at 20% 30%, $banner-fallback-light 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 75%, $banner-fallback-dark 0%, transparent 65%),
-        linear-gradient(160deg, $banner-fallback-light 0%, $banner-fallback-dark 100%);
-}
-
-.banner-canvas {
     display: block;
+    pointer-events: none;
     opacity: 0;
     transition: opacity 0.8s ease;
     &.is-ready {
@@ -53,8 +36,90 @@
     }
 }
 
-.banner .navbar {
+// Switch turning the relief animation on/off, in the top-right corner of the
+// page (it scrolls away with the banner). assets/js/domain-warp-header.js
+// shows it; it stays hidden without JS/WebGL and under reduced motion.
+.relief-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: $relief-toggle-color;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    &:focus-visible {
+        outline: 2px solid $accent;
+        outline-offset: 2px;
+    }
+    &[hidden] {
+        display: none;
+    }
+}
+
+.relief-toggle-track {
     position: relative;
+    width: $relief-toggle-width;
+    height: $relief-toggle-height;
+    border-radius: $relief-toggle-height / 2;
+    background-color: $relief-toggle-off;
+    transition: background-color 0.2s ease;
+}
+
+.relief-toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: $relief-toggle-height - 4px;
+    height: $relief-toggle-height - 4px;
+    border-radius: 50%;
+    background-color: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.relief-toggle[aria-checked="true"] {
+    .relief-toggle-track {
+        background-color: $accent;
+    }
+    .relief-toggle-thumb {
+        transform: translateX($relief-toggle-width - $relief-toggle-height);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .relief-toggle-track,
+    .relief-toggle-thumb {
+        transition: none;
+    }
+}
+
+.wrapper {
+    position: relative;
+}
+
+// A pale veil behind the text keeps it readable over the relief.
+.content {
+    background-color: $content-veil;
+    padding: 10px $content-padding;
+    margin-bottom: 30px;
+    border-radius: 6px;
+}
+
+.banner {
+    display: flex;
+    align-items: center;
+    height: $banner-height;
+}
+
+.banner .navbar {
     width: 100%;
     padding: 0;
     display: flow-root;
@@ -66,5 +131,13 @@
     }
     .banner .navbar {
         padding: 0;
+    }
+    .content {
+        padding: 10px $content-padding-small;
+    }
+    .relief-toggle {
+        top: 8px;
+        right: 8px;
+        font-size: 13px;
     }
 }

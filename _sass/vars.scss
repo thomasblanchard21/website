@@ -7,14 +7,22 @@ $image-size: 150px;
 $image-size-small: 110px;
 $footer-color: black;
 
-// Header banner (domain-warp relief, see _sass/banner.scss)
+// Header banner (holds the site name and nav, see _sass/banner.scss)
 $banner-height: 300px;
 $banner-height-small: 260px;
-// Where the banner starts fading into the white page (fully faded at the bottom)
-$banner-fade-start: 45%;
-// Static background shown without JS/WebGL, and under the canvas while it loads
-$banner-fallback-light: #f3f2ef;
-$banner-fallback-dark: #d9d8d4;
+// Page background (domain-warp relief): static background shown without
+// JS/WebGL, and under the canvas while it loads
+$relief-fallback-light: #f3f2ef;
+$relief-fallback-dark: #d9d8d4;
+// Translucent panel behind the page content, over the relief
+$content-veil: rgba(255, 255, 255, 0.85);
+$content-padding: 30px;
+$content-padding-small: 16px;
+// Switch turning the relief animation on/off (top-right corner of the page)
+$relief-toggle-width: 34px;
+$relief-toggle-height: 18px;
+$relief-toggle-off: #b5b5b5;
+$relief-toggle-color: #272727;
 
 // Slim nav bar pinned at the top once the banner is scrolled away (see _sass/sticky-bar.scss)
 $sticky-bar-height: 48px;

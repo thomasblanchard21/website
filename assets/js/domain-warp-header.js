@@ -1,8 +1,9 @@
 /*
  * Domain-warp header relief
  *
- * Draws a slowly flowing, pale "sculpted plaster" relief behind the header
- * banner, seen straight from above under a low raking light.
+ * Draws a slowly flowing, pale "sculpted plaster" relief behind the whole
+ * page (a fixed, viewport-sized canvas), seen straight from above under a
+ * low raking light.
  *
  * Technique (written from scratch for this site):
  *   1. Height pass: a domain-warped fBm heightfield, f(p) = fbm(p + k*r),
@@ -19,12 +20,19 @@
  *
  * Raw WebGL 1, no dependencies. Progressive enhancement: if anything is
  * missing (WebGL, a shader compile), the canvas stays transparent and the
- * CSS fallback background of .banner shows through.
+ * CSS fallback background of the page shows through.
+ *
+ * Performance: low-end devices start at a lower resolution and frame rate,
+ * and the resolution drops further if the frame rate actually reached is too
+ * low; as a last resort the relief freezes on a still frame. The
+ * .relief-toggle switch lets the visitor turn the animation off or on (the
+ * choice is kept in localStorage).
  */
 
-// Tweakable look. World units: the banner height spans `scale` units.
+// Tweakable look. World units: `referenceHeight` CSS px span `scale` units.
 const CONFIG = {
     scale: 0.8,             // zoom: larger = more, smaller features
+    referenceHeight: 300,   // CSS px, so the feature size doesn't depend on the viewport
     warp: 1.0,              // domain warp strength (k above)
     contrast: 2.3,          // spread of the raw fBm height around 0.5
     flowSpeed: 0.03,        // animation speed (world units per second, roughly)
@@ -55,7 +63,7 @@ const CONFIG = {
     seedRange: 20.0,        // random seeds fall in [0, seedRange); kept small for mediump GPUs
     frozenTime: 12.0,       // time used for the single frame under reduced motion
     // Mouse hover: the relief sinks around the cursor (off under reduced motion)
-    hoverRadius: 0.2,       // radius of the dip in world units (banner height = `scale`)
+    hoverRadius: 0.2,       // radius of the dip in world units
     hoverDepth: 0.45,       // how far the height drops at the centre (height range is 0..1)
     hoverFollow: 8.0,       // how fast the dip follows the cursor (per second)
     hoverFade: 4.0,         // how fast the dip appears/disappears (per second)
@@ -65,7 +73,53 @@ const CONFIG = {
     maxPixels: 1600000,     // pixel budget per frame...
     minScale: 0.75,         // ...but never render below this fraction of CSS px
     maxFps: 30,
+    // Low-end devices (see isLowEnd) start with these instead
+    lowEnd: { renderScale: 0.5, maxPixels: 600000, maxFps: 20 },
+    // Adaptive quality: if the frame rate actually reached stays below
+    // `slowRatio` of the target, the resolution drops one step; once the
+    // steps run out, the relief freezes on a still frame.
+    qualitySteps: [1, 0.75, 0.55],
+    slowRatio: 0.6,
+    sampleFrames: 40,       // frames per measurement
+    warmupFrames: 15,       // frames ignored after a (re)start or a quality change
 };
+
+// Low-end hints: few cores, little memory, or data saver on. Unreported
+// values count as capable; the adaptive quality catches the rest.
+function isLowEnd() {
+    const nav = navigator;
+    return (nav.hardwareConcurrency || 8) <= 4
+        || (nav.deviceMemory || 8) <= 4
+        || Boolean(nav.connection && nav.connection.saveData);
+}
+
+const PERF = Object.assign(
+    { renderScale: CONFIG.renderScale, maxPixels: CONFIG.maxPixels, maxFps: CONFIG.maxFps },
+    isLowEnd() ? CONFIG.lowEnd : {}
+);
+
+// The visitor's choice to pause the animation, kept across visits.
+const PAUSE_KEY = "relief-paused";
+
+function loadPaused() {
+    try {
+        return localStorage.getItem(PAUSE_KEY) === "1";
+    } catch (err) {
+        return false;
+    }
+}
+
+function savePaused(paused) {
+    try {
+        if (paused) {
+            localStorage.setItem(PAUSE_KEY, "1");
+        } else {
+            localStorage.removeItem(PAUSE_KEY);
+        }
+    } catch (err) {
+        // Storage blocked: the choice lasts for this page view only.
+    }
+}
 
 const SEED = CONFIG.seed || [Math.random() * CONFIG.seedRange, Math.random() * CONFIG.seedRange];
 
@@ -356,13 +410,16 @@ function createRenderer(canvas) {
     let pad = 0;
     let texW = 0;
     let texH = 0;
+    let worldH = CONFIG.scale;
 
-    function resize(w, h) {
+    // w, h: canvas size in px; viewH: world units spanned by the canvas height.
+    function resize(w, h, viewH) {
         width = w;
         height = h;
         canvas.width = w;
         canvas.height = h;
-        const texel = CONFIG.scale / h;
+        worldH = viewH;
+        const texel = worldH / h;
         pad = Math.ceil(CONFIG.shadowLength / texel) + 10;
         texW = w + 2 * pad;
         texH = h + 2 * pad;
@@ -378,7 +435,7 @@ function createRenderer(canvas) {
     }
 
     function render(time, mouse) {
-        const texel = CONFIG.scale / height;
+        const texel = worldH / height;
 
         // Pass 1: heightfield into the texture (with margin).
         gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
@@ -387,12 +444,12 @@ function createRenderer(canvas) {
         gl.useProgram(heightProg.program);
         gl.uniform2f(u.uPad, pad, pad);
         gl.uniform1f(u.uViewH, height);
-        gl.uniform1f(u.uScale, CONFIG.scale);
+        gl.uniform1f(u.uScale, worldH);
         gl.uniform1f(u.uWarp, CONFIG.warp);
         gl.uniform1f(u.uContrast, CONFIG.contrast);
         gl.uniform1f(u.uTime, time * CONFIG.flowSpeed);
         gl.uniform2f(u.uSeed, SEED[0], SEED[1]);
-        gl.uniform3f(u.uMouse, mouse.x * CONFIG.scale, mouse.y * CONFIG.scale, mouse.strength);
+        gl.uniform3f(u.uMouse, mouse.x * worldH, mouse.y * worldH, mouse.strength);
         gl.uniform1f(u.uHoverRadius, CONFIG.hoverRadius);
         gl.uniform1f(u.uHoverDepth, CONFIG.hoverDepth);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -447,17 +504,27 @@ function createRenderer(canvas) {
     return { gl, resize, render, dispose };
 }
 
-function mount(canvas) {
-    const banner = canvas.parentElement;
+function mount(canvas, toggle) {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     let renderer = null;
     let frame = 0;
     let lastDraw = -Infinity;
     let onScreen = true;
-    let started = performance.now();
-    let size = [0, 0];
-    // Cursor position in banner-height units, origin bottom-left (like gl_FragCoord).
+    // Animation clock in ms; it only runs while the relief is animated, so a
+    // pause resumes where it stopped.
+    let elapsed = 0;
+    let size = [0, 0, 0];
+    // Paused by the visitor (toggle button), or because the device is too slow.
+    let paused = loadPaused();
+    let tooSlow = false;
+    // Off once the visitor plays the animation again after it was found too slow.
+    let adaptive = true;
+    // Adaptive quality: index into CONFIG.qualitySteps, and the current measurement.
+    let quality = 0;
+    let sampleCount = 0;
+    let sampleTime = 0;
+    // Cursor position in canvas-height units, origin bottom-left (like gl_FragCoord).
     const pointer = { x: 0, y: 0, inside: false };
     const mouse = { x: 0, y: 0, strength: 0 };
     let lastMouseUpdate = 0;
@@ -465,24 +532,69 @@ function mount(canvas) {
     function canvasSize() {
         const rect = canvas.getBoundingClientRect();
         const dpr = Math.min(window.devicePixelRatio || 1, CONFIG.maxDpr);
-        let scale = dpr * CONFIG.renderScale;
+        const step = CONFIG.qualitySteps[quality];
+        let scale = dpr * PERF.renderScale * step;
         const area = rect.width * rect.height * scale * scale;
-        if (area > CONFIG.maxPixels) {
-            scale = Math.max(scale * Math.sqrt(CONFIG.maxPixels / area), Math.min(scale, CONFIG.minScale));
+        const maxPixels = PERF.maxPixels * step * step;
+        if (area > maxPixels) {
+            scale = Math.max(scale * Math.sqrt(maxPixels / area), Math.min(scale, CONFIG.minScale * step));
         }
-        return [Math.max(1, Math.round(rect.width * scale)), Math.max(1, Math.round(rect.height * scale))];
+        return [
+            Math.max(1, Math.round(rect.width * scale)),
+            Math.max(1, Math.round(rect.height * scale)),
+            CONFIG.scale * rect.height / CONFIG.referenceHeight,
+        ];
     }
 
     function draw(now) {
-        const [w, h] = canvasSize();
-        if (w !== size[0] || h !== size[1]) {
-            renderer.resize(w, h);
-            size = [w, h];
+        const [w, h, viewH] = canvasSize();
+        if (w !== size[0] || h !== size[1] || viewH !== size[2]) {
+            renderer.resize(w, h, viewH);
+            size = [w, h, viewH];
         }
-        const t = reducedMotion.matches ? CONFIG.frozenTime : CONFIG.frozenTime + (now - started) / 1000;
+        const t = CONFIG.frozenTime + (reducedMotion.matches ? 0 : elapsed / 1000);
         updateMouse(now);
         renderer.render(t, mouse);
         canvas.classList.add("is-ready");
+    }
+
+    // Still frame (paused, too slow, or reduced motion): no hover dip, since
+    // it would need redrawing as the cursor moves.
+    function drawStill() {
+        pointer.inside = false;
+        mouse.strength = 0;
+        draw(performance.now());
+    }
+
+    function restartMeasure() {
+        sampleCount = -CONFIG.warmupFrames;
+        sampleTime = 0;
+    }
+
+    // interval: ms since the previous drawn frame.
+    function measure(interval) {
+        if (!adaptive) {
+            return;
+        }
+        sampleCount++;
+        if (sampleCount <= 0) {
+            return;
+        }
+        sampleTime += interval;
+        if (sampleCount < CONFIG.sampleFrames) {
+            return;
+        }
+        const fps = 1000 * sampleCount / sampleTime;
+        restartMeasure();
+        if (fps >= PERF.maxFps * CONFIG.slowRatio) {
+            return;
+        }
+        if (quality < CONFIG.qualitySteps.length - 1) {
+            quality++;
+        } else {
+            tooSlow = true;
+            syncToggle();
+        }
     }
 
     function updateMouse(now) {
@@ -508,16 +620,60 @@ function mount(canvas) {
         if (!shouldAnimate()) {
             return;
         }
-        if (now - lastDraw >= 1000 / CONFIG.maxFps - 2) {
+        const interval = now - lastDraw;
+        if (interval >= 1000 / PERF.maxFps - 2) {
             lastDraw = now;
+            // A long gap (first frame, hiccup) neither moves the clock much nor counts as slow.
+            if (interval < 250) {
+                elapsed += interval;
+                measure(interval);
+            } else {
+                elapsed += 1000 / PERF.maxFps;
+                restartMeasure();
+            }
             draw(now);
+        }
+        if (!shouldAnimate()) {
+            // Found too slow just now: keep this frame, without the hover dip.
+            drawStill();
+            return;
         }
         frame = requestAnimationFrame(tick);
     }
 
-    function shouldAnimate() {
-        return renderer && onScreen && !document.hidden && !reducedMotion.matches;
+    function isFrozen() {
+        return reducedMotion.matches || paused || tooSlow;
     }
+
+    function shouldAnimate() {
+        return renderer && onScreen && !document.hidden && !isFrozen();
+    }
+
+    // The button is offered whenever the relief could move: not without
+    // WebGL, nor under reduced motion where it stays still anyway.
+    function syncToggle() {
+        if (!toggle) {
+            return;
+        }
+        toggle.hidden = !renderer || reducedMotion.matches;
+        toggle.setAttribute("aria-checked", String(!(paused || tooSlow)));
+    }
+
+    const onToggle = () => {
+        if (paused || tooSlow) {
+            if (tooSlow) {
+                // Playing again overrides the slowness check for this page view.
+                tooSlow = false;
+                adaptive = false;
+            }
+            paused = false;
+        } else {
+            paused = true;
+        }
+        savePaused(paused);
+        syncToggle();
+        update();
+    };
 
     function update() {
         if (!renderer) {
@@ -532,9 +688,9 @@ function mount(canvas) {
                 cancelAnimationFrame(frame);
                 frame = 0;
             }
-            // Reduced motion: keep one frozen frame, redrawn on resize.
-            if (reducedMotion.matches) {
-                draw(performance.now());
+            // Paused, too slow or reduced motion: keep one still frame, redrawn on resize.
+            if (isFrozen()) {
+                drawStill();
             }
         }
     }
@@ -545,7 +701,9 @@ function mount(canvas) {
         } catch (err) {
             renderer = null;
         }
-        size = [0, 0];
+        size = [0, 0, 0];
+        restartMeasure();
+        syncToggle();
         if (!renderer) {
             canvas.classList.remove("is-ready");
             return;
@@ -568,7 +726,7 @@ function mount(canvas) {
         onScreen = entries[entries.length - 1].isIntersecting;
         update();
     });
-    io.observe(banner);
+    io.observe(canvas);
 
     const ro = new ResizeObserver(() => {
         if (renderer && !frame) {
@@ -592,7 +750,10 @@ function mount(canvas) {
     };
 
     const onVisibility = () => update();
-    const onMotionChange = () => update();
+    const onMotionChange = () => {
+        syncToggle();
+        update();
+    };
     const onContextLost = (e) => {
         e.preventDefault();
         if (frame) {
@@ -601,6 +762,7 @@ function mount(canvas) {
         }
         renderer = null;
         canvas.classList.remove("is-ready");
+        syncToggle();
     };
     const onContextRestored = () => start();
     const onPageHide = (e) => {
@@ -616,27 +778,34 @@ function mount(canvas) {
         }
     };
 
-    banner.addEventListener("pointermove", onPointerMove);
-    banner.addEventListener("pointerleave", onPointerLeave);
+    document.addEventListener("pointermove", onPointerMove);
+    document.documentElement.addEventListener("pointerleave", onPointerLeave);
     document.addEventListener("visibilitychange", onVisibility);
     reducedMotion.addEventListener("change", onMotionChange);
     canvas.addEventListener("webglcontextlost", onContextLost);
     canvas.addEventListener("webglcontextrestored", onContextRestored);
     window.addEventListener("pagehide", onPageHide);
     window.addEventListener("pageshow", onPageShow);
+    if (toggle) {
+        toggle.addEventListener("click", onToggle);
+    }
 
     function teardown() {
         stop();
         io.disconnect();
         ro.disconnect();
-        banner.removeEventListener("pointermove", onPointerMove);
-        banner.removeEventListener("pointerleave", onPointerLeave);
+        document.removeEventListener("pointermove", onPointerMove);
+        document.documentElement.removeEventListener("pointerleave", onPointerLeave);
         document.removeEventListener("visibilitychange", onVisibility);
         reducedMotion.removeEventListener("change", onMotionChange);
         canvas.removeEventListener("webglcontextlost", onContextLost);
         canvas.removeEventListener("webglcontextrestored", onContextRestored);
         window.removeEventListener("pagehide", onPageHide);
         window.removeEventListener("pageshow", onPageShow);
+        if (toggle) {
+            toggle.removeEventListener("click", onToggle);
+            toggle.hidden = true;
+        }
         canvas.classList.remove("is-ready");
     }
 
@@ -646,5 +815,5 @@ function mount(canvas) {
 
 const canvas = document.querySelector('canvas[data-effect="domain-warp"]');
 if (canvas && "IntersectionObserver" in window && "ResizeObserver" in window) {
-    mount(canvas);
+    mount(canvas, document.querySelector(".relief-toggle"));
 }
