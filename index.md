@@ -20,14 +20,58 @@ Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit la
 
 TODO: list your projects.
 
+<!-- TODO(thomas): temporary layout filler, remove once the projects are listed -->
+### Lorem project one
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus. Donec ullamcorper nulla non metus auctor fringilla. Cras mattis consectetur purus sit amet fermentum.
+
+- Vestibulum id ligula porta felis euismod semper
+- Maecenas faucibus mollis interdum
+- Nullam quis risus eget urna mollis ornare vel eu leo
+
+### Lorem project two
+
+Curabitur blandit tempus porttitor. Etiam porta sem malesuada magna mollis euismod. Aenean lacinia bibendum nulla sed consectetur. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.
+
+Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Donec sed odio dui. Nulla vitae elit libero, a pharetra augue.
+
+### Lorem project three
+
+Sed posuere consectetur est at lobortis. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Maecenas sed diam eget risus varius blandit sit amet non magna.
+
 ## Research {#research}
 
 TODO: describe your research interests and current work.
+
+<!-- TODO(thomas): temporary layout filler, remove once the research section is written -->
+Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.
+
+### Lorem interest
+
+Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur. At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
+
+### Ipsum interest
+
+Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet.
 
 ## Publications {#publications}
 
 TODO: list your publications.
 
+<!-- TODO(thomas): temporary layout filler, remove once the real publications are listed -->
+1. Lorem, I. and Dolor, S. *Consectetur adipiscing elit sed do eiusmod tempor.* Placeholder Journal of Lorem Ipsum, 20XX.
+2. Lorem, I., Amet, C. and Elit, S. *Ut enim ad minim veniam, quis nostrud exercitation.* Proceedings of the Placeholder Conference, 20XX.
+3. Lorem, I. *Duis aute irure dolor in reprehenderit in voluptate velit esse.* Placeholder Workshop, 20XX.
+4. Ipsum, D. and Lorem, I. *Excepteur sint occaecat cupidatat non proident.* Placeholder Journal of Lorem Ipsum, 20XX.
+5. Lorem, I. *Sunt in culpa qui officia deserunt mollit anim id est laborum.* Placeholder Thesis, 20XX.
+
 ## Contact {#contact}
 
 TODO: add contact details (email, social / academic profiles).
+
+<!-- TODO(thomas): temporary layout filler, remove once the contact details are added -->
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+- Email: TODO
+- Lorem profile: TODO
+- Ipsum profile: TODO

@@ -18,6 +18,11 @@ html {
     }
 }
 
+// Space between sections; the first heading stays close to the banner.
+.content > h2:not(:first-child) {
+    margin-top: $section-spacing;
+}
+
 .sticky-bar {
     position: fixed;
     top: 0;
@@ -75,6 +80,9 @@ html {
     html {
         // The bar wraps onto two or three lines here.
         scroll-padding-top: $sticky-bar-height-small + 10px;
+    }
+    .content > h2:not(:first-child) {
+        margin-top: $section-spacing-small;
     }
     .sticky-bar-inner {
         justify-content: center;
