@@ -30,6 +30,7 @@
     {% if header_effect %}
         <script type="module" src="{{ "/assets/js/domain-warp-header.js" | relative_url }}"></script>
     {% endif %}
+    <script type="module" src="{{ "/assets/js/sticky-nav.js" | relative_url }}"></script>
     {% if site.favicon %}
         <link rel="icon" type="image/ico" href="{{ site.favicon_location }}">
         <link rel="shortcut-icon" type="image/ico" href="{{ site.favicon_location }}">
@@ -69,27 +70,20 @@
                 {% if site.ins_logo %}
                     <img id="ins-logo" src="{{ site.ins_logo | relative_url }}" alt="Institute logo" />
                 {% endif %}
-                <a id="author-name" class="alignable pull-left" href="{{ "/" | relative_url }}">{{ site.title }}</a>
+                <a id="author-name" class="alignable pull-left" href="{{ "/#top" | relative_url }}">{{ site.title }}</a>
                 <ul id="navlist" class="alignable pull-right navbar-ul">
-                    {% for x in site.nav %}
-                        {% if x.link contains "://" %}
-                            {% assign href = x.link %}
-                        {% else %}
-                            {% assign href = x.link | relative_url %}
-                        {% endif %}
-                        {% if x.name == "Resume" %}
-                            <li class="alignable pull-left nav-list"><a target="_blank" href="{{ href }}">{{ x.name }}</a>
-                        {% else %}
-                            <li class="alignable pull-left nav-list"><a href="{{ href }}">{{ x.name }}</a>
-                        {% endif %}
-                        {% if forloop.last == false %}
-                            /
-                        {% endif %}
-                            </li>
-                    {% endfor %}
+                    {% include nav-items.html li_class="alignable pull-left nav-list" %}
                 </ul>
             </div>
         </header>
+        <nav class="sticky-bar" aria-label="Sections">
+            <div class="sticky-bar-inner container">
+                <a class="sticky-bar-name" href="{{ "/#top" | relative_url }}">{{ site.title }}</a>
+                <ul class="sticky-bar-links">
+                    {% include nav-items.html li_class="sticky-bar-item" %}
+                </ul>
+            </div>
+        </nav>
         {% if page.is_contact == true %}
             <div class="container content contact">
         {% else %}

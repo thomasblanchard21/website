@@ -16,6 +16,11 @@ $banner-fade-start: 45%;
 $banner-fallback-light: #f3f2ef;
 $banner-fallback-dark: #d9d8d4;
 
+// Slim nav bar pinned at the top once the banner is scrolled away (see _sass/sticky-bar.scss)
+$sticky-bar-height: 48px;
+$sticky-bar-height-small: 80px; // the bar wraps at phone width
+$sticky-bar-background: rgba(255, 255, 255, 0.92);
+
 /*
  * Build Variables, don't touch
  */

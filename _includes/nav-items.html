@@ -1,0 +1,20 @@
+{% comment %}
+    The nav links from site.nav, as <li> items. Shared by the banner menu
+    and the sticky bar. include.li_class: classes of each <li>.
+{% endcomment %}
+{% for x in site.nav %}
+    {% if x.link contains "://" %}
+        {% assign href = x.link %}
+    {% else %}
+        {% assign href = x.link | relative_url %}
+    {% endif %}
+    {% if x.name == "Resume" %}
+        <li class="{{ include.li_class }}"><a target="_blank" href="{{ href }}">{{ x.name }}</a>
+    {% else %}
+        <li class="{{ include.li_class }}"><a href="{{ href }}">{{ x.name }}</a>
+    {% endif %}
+    {% if forloop.last == false %}
+        /
+    {% endif %}
+        </li>
+{% endfor %}

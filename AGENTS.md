@@ -36,12 +36,14 @@ bundle exec jekyll build       # one-off build into _site/ (use this to check a 
 | `_sass/vars.scss` | Customization variables (`$accent`, `$image-size`) and breakpoints |
 | `_sass/_style.scss`, `typography.scss`, `tables.scss` | Theme styles |
 | `css/main.scss` | Sass entry point (has empty front matter so Jekyll processes it) |
-| `index.md` | Home/About page |
-| `contact.md` | Contact page (`is_contact: true` in front matter adds the `contact` CSS class) |
+| `index.md` | The whole site: one page with an `## Heading {#id}` per nav item after the intro (About, Projects, Research, Publications, Contact) |
+| `_includes/nav-items.html` | Nav links from `site.nav`, shared by the banner menu and the sticky bar |
+| `_sass/sticky-bar.scss`, `assets/js/sticky-nav.js` | Smooth scrolling to sections, and the slim bar pinned at the top once the banner is scrolled away |
 | `resume.pdf`, `sherlock.jpg`, `bits-logo.png` | Template placeholder assets, to be replaced |
 
-New pages: add `foo.md` at the root with `layout: default` front matter. It is served at `/foo`.
-Add it to `nav` in `_config.yml` if it should appear in the navbar.
+The site is a single page. New section: add a `## Foo {#foo}` heading to `index.md` and a
+`nav` item with `link: "/#foo"` in `_config.yml`. A separate page is still possible (`foo.md` at the root with
+`layout: default`, served at `/foo`), but ask Thomas first.
 
 ## Deployment and constraints
 
@@ -54,7 +56,7 @@ Add it to `nav` in `_config.yml` if it should appear in the navbar.
   does not support. If a feature needs one, propose an alternative or ask first.
 - **Never hardcode the base path.** Build internal links and asset URLs with Liquid's `relative_url` filter
   (for example `{{ "/css/main.css" | relative_url }}`) so that the site works whatever `baseurl` is.
-  `nav` links in `_config.yml` are root-relative (`/contact`) and the layout runs them through `relative_url`.
+  `nav` links in `_config.yml` are root-relative (`/#contact`) and the layout runs them through `relative_url`.
   Links containing `://` are left as they are.
 - If a needed feature isn't possible under these limits (a non-whitelisted plugin, Jekyll 4, modern Sass `@use`,
   an npm build step), the escape hatch is to build with a **GitHub Actions** workflow instead of GitHub's built-in
@@ -109,5 +111,5 @@ This is a planned direction. Follow these rules when you implement it:
 
 ## Known issues
 
-- `index.md`, `contact.md`, `resume.pdf`, and `sherlock.jpg` still hold template placeholder content.
+- `index.md` (every section), `resume.pdf`, and `sherlock.jpg` still hold template placeholder content.
 - `description` in `_config.yml` is empty (marked `TODO(thomas)`).

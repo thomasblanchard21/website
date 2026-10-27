@@ -22,14 +22,16 @@ sass:
     style: compressed
     sass_dir: _sass
 
+# The site is a single page: each nav item scrolls to a section of index.md.
+# "#top" scrolls back to the top of the page.
 nav:
  - name: "Home"
-   link: "/"
+   link: "/#top"
  - name: "Projects"
-   link: "/projects"
+   link: "/#projects"
  - name: "Research"
-   link: "/research"
+   link: "/#research"
  - name: "Publications"
-   link: "/publications"
+   link: "/#publications"
  - name: "Contact"
-   link: "/contact"
+   link: "/#contact"
