@@ -1,0 +1,62 @@
+@import "vars";
+
+/*
+ * Overlay scrollbar
+ *
+ * assets/js/scrollbar.js adds .has-scrollbar to <html> (hiding the native
+ * page scrollbar) and a .scrollbar rail on the right, shown (.is-visible)
+ * while the page scrolls. .scrollbar is a wider, invisible hit area around
+ * the thin visible track.
+ */
+
+html.has-scrollbar {
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.scrollbar {
+    position: fixed;
+    top: 50%;
+    right: $scrollbar-offset - ($scrollbar-hit-width - $scrollbar-width) / 2;
+    z-index: 15;
+    display: flex;
+    justify-content: center;
+    width: $scrollbar-hit-width;
+    height: $scrollbar-height;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity $scrollbar-fade ease;
+    &.is-visible,
+    &.is-dragging {
+        opacity: 1;
+    }
+    &[hidden] {
+        display: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+
+.scrollbar-track {
+    position: relative;
+    width: $scrollbar-width;
+    height: 100%;
+    border-radius: $scrollbar-width / 2;
+    background-color: $scrollbar-track-color;
+}
+
+.scrollbar-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border-radius: $scrollbar-width / 2;
+    background-color: $scrollbar-thumb-color;
+    cursor: grab;
+    .is-dragging & {
+        cursor: grabbing;
+    }
+}
