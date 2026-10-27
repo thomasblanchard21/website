@@ -44,7 +44,7 @@
 .banner-canvas {
     display: block;
     opacity: 0;
-    transition: opacity 0.8s ease;
+    transition: opacity 0.3s ease;
     &.is-ready {
         opacity: 1;
     }

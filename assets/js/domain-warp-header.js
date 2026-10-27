@@ -283,14 +283,12 @@ function compile(gl, type, src) {
     const s = gl.createShader(type);
     gl.shaderSource(s, src);
     gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        const log = gl.getShaderInfoLog(s);
-        gl.deleteShader(s);
-        throw new Error(log);
-    }
     return s;
 }
 
+// Starts compiling and linking without waiting for the result: querying a
+// status blocks until the driver is done, which can take a few hundred ms
+// on a cold shader cache. link() checks the result later.
 function program(gl, vertSrc, fragSrc) {
     const vs = compile(gl, gl.VERTEX_SHADER, vertSrc);
     const fs = compile(gl, gl.FRAGMENT_SHADER, fragSrc);
@@ -299,20 +297,24 @@ function program(gl, vertSrc, fragSrc) {
     gl.attachShader(p, fs);
     gl.bindAttribLocation(p, 0, "aPos");
     gl.linkProgram(p);
-    gl.deleteShader(vs);
-    gl.deleteShader(fs);
-    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
-        const log = gl.getProgramInfoLog(p);
-        gl.deleteProgram(p);
+    return { program: p, shaders: [vs, fs], uniforms: null };
+}
+
+function link(gl, prog) {
+    const p = prog.program;
+    const ok = gl.getProgramParameter(p, gl.LINK_STATUS);
+    const log = ok ? "" : prog.shaders.map((s) => gl.getShaderInfoLog(s)).join("\n") + gl.getProgramInfoLog(p);
+    prog.shaders.forEach((s) => gl.deleteShader(s));
+    prog.shaders = [];
+    if (!ok) {
         throw new Error(log);
     }
-    const uniforms = {};
+    prog.uniforms = {};
     const count = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
     for (let i = 0; i < count; i++) {
         const name = gl.getActiveUniform(p, i).name;
-        uniforms[name] = gl.getUniformLocation(p, name);
+        prog.uniforms[name] = gl.getUniformLocation(p, name);
     }
-    return { program: p, uniforms };
 }
 
 function createRenderer(canvas) {
@@ -329,8 +331,10 @@ function createRenderer(canvas) {
         return null;
     }
 
+    const parallel = gl.getExtension("KHR_parallel_shader_compile");
     const heightProg = program(gl, VERT, HEIGHT_FRAG);
     const shadeProg = program(gl, VERT, SHADE_FRAG);
+    let linked = false;
 
     // One triangle covering the viewport.
     const quad = gl.createBuffer();
@@ -433,6 +437,24 @@ function createRenderer(canvas) {
         gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
+    // True once both programs are linked. With KHR_parallel_shader_compile
+    // the driver compiles in the background and this returns false until it
+    // is done, so the page stays responsive; without it, the first call
+    // blocks. Throws if a shader fails to compile or link.
+    function ready() {
+        if (linked) {
+            return true;
+        }
+        if (parallel && !(gl.getProgramParameter(heightProg.program, parallel.COMPLETION_STATUS_KHR) &&
+                gl.getProgramParameter(shadeProg.program, parallel.COMPLETION_STATUS_KHR))) {
+            return false;
+        }
+        link(gl, heightProg);
+        link(gl, shadeProg);
+        linked = true;
+        return true;
+    }
+
     function dispose() {
         if (gl.isContextLost()) {
             return;
@@ -440,11 +462,13 @@ function createRenderer(canvas) {
         gl.deleteFramebuffer(fbo);
         gl.deleteTexture(tex);
         gl.deleteBuffer(quad);
-        gl.deleteProgram(heightProg.program);
-        gl.deleteProgram(shadeProg.program);
+        [heightProg, shadeProg].forEach((prog) => {
+            prog.shaders.forEach((s) => gl.deleteShader(s));
+            gl.deleteProgram(prog.program);
+        });
     }
 
-    return { gl, resize, render, dispose };
+    return { gl, ready, resize, render, dispose };
 }
 
 function mount(canvas) {
@@ -508,11 +532,22 @@ function mount(canvas) {
         if (!shouldAnimate()) {
             return;
         }
-        if (now - lastDraw >= 1000 / CONFIG.maxFps - 2) {
+        if (now - lastDraw >= 1000 / CONFIG.maxFps - 2 && rendererReady()) {
             lastDraw = now;
             draw(now);
         }
         frame = requestAnimationFrame(tick);
+    }
+
+    // On a shader error, give up and leave the CSS fallback background.
+    function rendererReady() {
+        try {
+            return renderer.ready();
+        } catch (err) {
+            stop();
+            canvas.classList.remove("is-ready");
+            return false;
+        }
     }
 
     function shouldAnimate() {
@@ -534,7 +569,14 @@ function mount(canvas) {
             }
             // Reduced motion: keep one frozen frame, redrawn on resize.
             if (reducedMotion.matches) {
-                draw(performance.now());
+                if (rendererReady()) {
+                    draw(performance.now());
+                } else if (renderer) {
+                    frame = requestAnimationFrame(() => {
+                        frame = 0;
+                        update();
+                    });
+                }
             }
         }
     }
