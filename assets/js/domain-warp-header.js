@@ -25,7 +25,7 @@
  * Performance: low-end devices start at a lower resolution and frame rate,
  * and the resolution drops further if the frame rate actually reached is too
  * low; as a last resort the relief freezes on a still frame. The
- * .relief-toggle button lets the visitor pause or play the animation (the
+ * .relief-toggle switch lets the visitor turn the animation off or on (the
  * choice is kept in localStorage).
  */
 
@@ -655,12 +655,8 @@ function mount(canvas, toggle) {
         if (!toggle) {
             return;
         }
-        const frozen = paused || tooSlow;
         toggle.hidden = !renderer || reducedMotion.matches;
-        toggle.classList.toggle("is-paused", frozen);
-        const label = frozen ? "Play background animation" : "Pause background animation";
-        toggle.setAttribute("aria-label", label);
-        toggle.title = label;
+        toggle.setAttribute("aria-checked", String(!(paused || tooSlow)));
     }
 
     const onToggle = () => {
