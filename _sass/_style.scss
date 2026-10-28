@@ -74,10 +74,15 @@ hr {
 
 /* Footer */
 
+// Solid band across the full width of the page, below the section panels.
 .site-footer {
+    position: relative;
     text-align: center;
-    margin-bottom: 0;
-    padding-bottom: 30px;
+    background-color: $footer-background;
+    p {
+        margin: 0 auto;
+        padding: 16px 0;
+    }
     a {
         color: $footer-color;
     }
@@ -140,4 +145,5 @@ hr {
 @import "banner";
 @import "sticky-bar";
 @import "scrollbar";
+@import "panels";
 @import "reveal";

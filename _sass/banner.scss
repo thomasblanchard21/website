@@ -105,14 +105,6 @@ body {
     position: relative;
 }
 
-// A pale veil behind the text keeps it readable over the relief.
-.content {
-    background-color: $content-veil;
-    padding: 10px $content-padding;
-    margin-bottom: 30px;
-    border-radius: 6px;
-}
-
 .banner {
     display: flex;
     align-items: center;
@@ -131,9 +123,6 @@ body {
     }
     .banner .navbar {
         padding: 0;
-    }
-    .content {
-        padding: 10px $content-padding-small;
     }
     .relief-toggle {
         top: 8px;

@@ -14,8 +14,15 @@ $banner-height-small: 260px;
 // JS/WebGL, and under the canvas while it loads
 $relief-fallback-light: #f3f2ef;
 $relief-fallback-dark: #d9d8d4;
-// Translucent panel behind the page content, over the relief
-$content-veil: rgba(255, 255, 255, 0.85);
+// Frosted glass panel behind each section of the page, over the relief
+// (see _sass/panels.scss)
+$panel-background: rgba(255, 255, 255, 0.6);
+$panel-background-opaque: rgba(255, 255, 255, 0.88); // without backdrop-filter
+$panel-border: rgba(255, 255, 255, 0.7);
+$panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+$panel-blur: 12px;
+$panel-radius: 12px;
+$footer-background: white; // solid full-width band at the bottom of the page
 $content-padding: 30px;
 $content-padding-small: 16px;
 // Switch turning the relief animation on/off (top-right corner of the page)
@@ -37,9 +44,9 @@ $scrollbar-hit-width: 20px;   // invisible area around the track that reacts to 
 $scrollbar-track-color: rgba(0, 0, 0, 0.12);
 $scrollbar-thumb-color: #111;
 $scrollbar-fade: 0.6s;
-// Space above each section heading of the one-page site
-$section-spacing: 80px;
-$section-spacing-small: 50px;
+// Gap between the section panels of the one-page site
+$section-spacing: 40px;
+$section-spacing-small: 24px;
 // Fade-in of the sections as they scroll into view (see _sass/reveal.scss)
 $reveal-duration: 0.8s;
 
