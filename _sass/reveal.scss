@@ -1,0 +1,18 @@
+@import "vars";
+
+/*
+ * Section reveal
+ *
+ * assets/js/reveal.js marks the elements of the sections below the fold
+ * with .reveal (hidden), then adds .is-revealed when the section scrolls
+ * into view. Opacity only: a slide would shift the headings that nav links
+ * jump to.
+ */
+
+.reveal {
+    opacity: 0;
+    transition: opacity $reveal-duration ease;
+    &.is-revealed {
+        opacity: 1;
+    }
+}
