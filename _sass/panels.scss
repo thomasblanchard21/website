@@ -1,0 +1,49 @@
+@import "vars";
+
+/*
+ * Section panels
+ *
+ * Each section of index.md is wrapped in a <section class="panel">: a frosted
+ * glass card that blurs the relief behind it so the text stays readable.
+ * Browsers without backdrop-filter get a more opaque panel instead.
+ */
+
+.content {
+    padding-bottom: $section-spacing;
+}
+
+.panel {
+    padding: 10px $content-padding;
+    background-color: $panel-background-opaque;
+    border: 1px solid $panel-border;
+    border-radius: $panel-radius;
+    box-shadow: $panel-shadow;
+    & + & {
+        margin-top: $section-spacing;
+    }
+    // A nav jump lands on the heading; keep the panel's top edge in view too
+    // (panel padding + heading margin).
+    > h2:first-child {
+        scroll-margin-top: 30px;
+    }
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .panel {
+        background-color: $panel-background;
+        -webkit-backdrop-filter: blur($panel-blur) saturate(1.2);
+        backdrop-filter: blur($panel-blur) saturate(1.2);
+    }
+}
+
+@media (max-width: 500px) {
+    .content {
+        padding-bottom: $section-spacing-small;
+    }
+    .panel {
+        padding: 10px $content-padding-small;
+        & + & {
+            margin-top: $section-spacing-small;
+        }
+    }
+}

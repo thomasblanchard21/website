@@ -96,22 +96,23 @@
             <div class="container content">
         {% endif %}
                 {{ content }}
-                {% if site.footer == true %}
-                    <hr />
-                    <p class="site-footer">
-                    <small>
-                        <a href="{{ site.source_url }}">Source code</a> ·
-                        Based on the <a href="{{ site.template_url }}">researcher</a> template
-                        by <a href="{{ site.template_author_url }}">{{ site.template_author }}</a> ·
-                        {% if header_effect %}
-                            Background uses <a href="https://iquilezles.org/articles/warp/">domain warping</a>
-                            by Inigo Quilez ·
-                        {% endif %}
-                        Last updated {{ site.time | date: "%B %-d, %Y" }}
-                    </small>
-                    </p>
-                {% endif %}
             </div>
+        {% if site.footer == true %}
+            <footer class="site-footer">
+                <p class="container">
+                <small>
+                    <a href="{{ site.source_url }}">Source code</a> ·
+                    Based on the <a href="{{ site.template_url }}">researcher</a> template
+                    by <a href="{{ site.template_author_url }}">{{ site.template_author }}</a> ·
+                    {% if header_effect %}
+                        Background uses <a href="https://iquilezles.org/articles/warp/">domain warping</a>
+                        by Inigo Quilez ·
+                    {% endif %}
+                    Last updated {{ site.time | date: "%B %-d, %Y" }}
+                </small>
+                </p>
+            </footer>
+        {% endif %}
     </div>
 </body>
 </html>

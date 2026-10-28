@@ -2,6 +2,8 @@
 layout: default
 ---
 
+<section class="panel" markdown="1">
+
 ## About Me
 
 <!-- TODO(thomas): replace sherlock.jpg with your own photo -->
@@ -15,6 +17,10 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam finibus ipsum a
 Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
 
 Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.
+
+</section>
+
+<section class="panel" markdown="1">
 
 ## Projects {#projects}
 
@@ -39,6 +45,10 @@ Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Praesent commodo c
 
 Sed posuere consectetur est at lobortis. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Maecenas sed diam eget risus varius blandit sit amet non magna.
 
+</section>
+
+<section class="panel" markdown="1">
+
 ## Research {#research}
 
 TODO: describe your research interests and current work.
@@ -54,6 +64,10 @@ Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil 
 
 Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet.
 
+</section>
+
+<section class="panel" markdown="1">
+
 ## Publications {#publications}
 
 TODO: list your publications.
@@ -65,6 +79,10 @@ TODO: list your publications.
 4. Ipsum, D. and Lorem, I. *Excepteur sint occaecat cupidatat non proident.* Placeholder Journal of Lorem Ipsum, 20XX.
 5. Lorem, I. *Sunt in culpa qui officia deserunt mollit anim id est laborum.* Placeholder Thesis, 20XX.
 
+</section>
+
+<section class="panel" markdown="1">
+
 ## Contact {#contact}
 
 TODO: add contact details (email, social / academic profiles).
@@ -75,3 +93,5 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor i
 - Email: TODO
 - Lorem profile: TODO
 - Ipsum profile: TODO
+
+</section>
