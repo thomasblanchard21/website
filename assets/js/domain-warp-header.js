@@ -42,6 +42,13 @@ const CONFIG = {
     depth: 0.18,            // relief depth in world units (stronger shading/shadows)
     lightAzimuth: 145,      // degrees, 0 = from the right, 90 = from the top
     lightElevation: 35,     // degrees above the horizon (low = raking light)
+    // Second, accent-colored light from the other side (no shadows, cheap).
+    // Added on top of the surface color as a glow, so it stays bright on the dark grey.
+    accentAzimuth: 325,     // degrees, same convention as lightAzimuth
+    accentElevation: 12,    // low, so it mostly catches the slopes facing it
+    accentLight: 0.55,      // intensity
+    accentPower: 4.0,       // higher = glow only on the steepest slopes facing it
+    accentColor: [1.0, 0.24, 0.05], // $accent in _sass/vars.scss (#FF3D0D)
     shadowLength: 0.09,     // max shadow march distance in world units
     shadowSoftness: 2.0,    // higher = harder shadow edges
     ambient: 0.84,          // sky/ambient light intensity
@@ -53,10 +60,10 @@ const CONFIG = {
     occlusion: 1.2,         // strength of the cavity/occlusion darkening
     occlusionFloor: 0.78,   // darkest the occlusion term can get (0..1)
     shadowFloor: 0.55,      // how much sun still reaches shadowed areas (0..1)
-    sheen: 0.15,            // strength of the broad satin specular
+    sheen: 0.06,            // strength of the broad satin specular
     sheenPower: 20.0,       // specular exponent (lower = broader)
     layerTint: 0.035,       // per-layer albedo variation (subtle strata)
-    albedo: [0.975, 0.985, 0.995],
+    albedo: [0.135, 0.135, 0.14], // dark grey, to match the dark theme
     sunColor: [1.0, 0.99, 0.97],
     ambientColor: [0.90, 0.93, 0.96],
     seed: null,             // [x, y] shifts the pattern; null picks a random one per page load
@@ -226,6 +233,7 @@ uniform float uTerraceWidth;
 uniform float uTerraceSlope;
 uniform float uDepth;
 uniform vec3 uLight;     // unit vector toward the light, z up
+uniform vec3 uAccentLight; // unit vector toward the accent light
 uniform float uShadowTexels;
 uniform float uShadowSoftness;
 uniform float uAmbient;
@@ -243,6 +251,9 @@ uniform float uLayerTint;
 uniform vec3 uAlbedo;
 uniform vec3 uSunColor;
 uniform vec3 uAmbientColor;
+uniform float uAccent;
+uniform float uAccentPower;
+uniform vec3 uAccentColor;
 
 float rawHeight(vec2 px) {
     vec4 c = texture2D(uHeight, px / uTexSize);
@@ -327,6 +338,9 @@ void main() {
     vec3 hv = normalize(uLight + vec3(0.0, 0.0, 1.0));
     col += uSunColor * (uSheen * pow(max(dot(n, hv), 0.0), uSheenPower) * shadow);
 
+    // Neon glow from the accent light, on the slopes facing it.
+    col += uAccentColor * (uAccent * pow(max(dot(n, uAccentLight), 0.0), uAccentPower));
+
     // Gentle highlight roll-off instead of a hard clip.
     col = col / (1.0 + 0.18 * max(col - 0.85, 0.0) * 4.0);
     gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
@@ -404,6 +418,9 @@ function createRenderer(canvas) {
     const az = CONFIG.lightAzimuth * Math.PI / 180;
     const el = CONFIG.lightElevation * Math.PI / 180;
     const light = [Math.cos(az) * Math.cos(el), Math.sin(az) * Math.cos(el), Math.sin(el)];
+    const accentAz = CONFIG.accentAzimuth * Math.PI / 180;
+    const accentEl = CONFIG.accentElevation * Math.PI / 180;
+    const accentLight = [Math.cos(accentAz) * Math.cos(accentEl), Math.sin(accentAz) * Math.cos(accentEl), Math.sin(accentEl)];
 
     let width = 0;
     let height = 0;
@@ -470,6 +487,7 @@ function createRenderer(canvas) {
         gl.uniform1f(u.uTerraceSlope, CONFIG.terraceSlope);
         gl.uniform1f(u.uDepth, CONFIG.depth);
         gl.uniform3f(u.uLight, light[0], light[1], light[2]);
+        gl.uniform3f(u.uAccentLight, accentLight[0], accentLight[1], accentLight[2]);
         gl.uniform1f(u.uShadowTexels, CONFIG.shadowLength / texel);
         gl.uniform1f(u.uShadowSoftness, CONFIG.shadowSoftness);
         gl.uniform1f(u.uAmbient, CONFIG.ambient);
@@ -487,6 +505,9 @@ function createRenderer(canvas) {
         gl.uniform3fv(u.uAlbedo, CONFIG.albedo);
         gl.uniform3fv(u.uSunColor, CONFIG.sunColor);
         gl.uniform3fv(u.uAmbientColor, CONFIG.ambientColor);
+        gl.uniform1f(u.uAccent, CONFIG.accentLight);
+        gl.uniform1f(u.uAccentPower, CONFIG.accentPower);
+        gl.uniform3fv(u.uAccentColor, CONFIG.accentColor);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 

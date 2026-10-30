@@ -2,28 +2,36 @@
  * Customization Variables
  */
 
-$accent: #FF0F00;
+$accent: #FF3D0D; // keep accentColor in assets/js/domain-warp-header.js in sync
 $image-size: 150px;
 $image-size-small: 110px;
-$footer-color: black;
+$footer-color: #e4e4e4;
+// Dark theme: text on the dark grey backgrounds below
+$text-color: #e4e4e4;
+$heading-color: #f2f2f2; // site name in the banner and the sticky bar
+$rule-color: rgba(255, 255, 255, 0.12); // <hr>
+$blockquote-border: #777777;
+$table-border: #5a5a5a;
+$table-row: #424242;
+$table-row-alt: #484848;
 
 // Header banner (holds the site name and nav, see _sass/banner.scss)
 $banner-height: 140px;
 $banner-height-small: 150px; // name and nav stack at phone width
-$banner-background: white; // flat, covers the relief (which shows from the sections down)
+$banner-background: #3c3c3c; // flat, covers the relief (which shows from the sections down)
 // Page background (domain-warp relief): static background shown without
 // JS/WebGL, and under the canvas while it loads
-$relief-fallback-light: #f3f2ef;
-$relief-fallback-dark: #d9d8d4;
+$relief-fallback-light: #2e2e2e;
+$relief-fallback-dark: #1c1c1c;
 // Frosted glass panel behind each section of the page, over the relief
 // (see _sass/panels.scss)
-$panel-background: rgba(255, 255, 255, 0.6);
-$panel-background-opaque: rgba(255, 255, 255, 0.88); // without backdrop-filter
-$panel-border: rgba(255, 255, 255, 0.7);
-$panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+$panel-background: rgba(60, 60, 60, 0.6);
+$panel-background-opaque: rgba(60, 60, 60, 0.9); // without backdrop-filter
+$panel-border: rgba(255, 255, 255, 0.08);
+$panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 $panel-blur: 12px;
 $panel-radius: 12px;
-$footer-background: white; // solid full-width band at the bottom of the page
+$footer-background: $banner-background; // solid full-width band at the bottom of the page
 // Footer height before assets/js/section-scroll.js measures it (or without JS)
 $footer-height: 65px;
 $footer-height-small: 100px; // the footer wraps at phone width
@@ -32,8 +40,9 @@ $content-padding-small: 16px;
 // Switch turning the relief animation on/off (top-right corner of the page)
 $relief-toggle-width: 34px;
 $relief-toggle-height: 18px;
-$relief-toggle-off: #b5b5b5;
-$relief-toggle-color: #272727;
+$relief-toggle-off: #6a6a6a;
+$relief-toggle-color: $text-color;
+$relief-toggle-thumb: #e4e4e4;
 
 // Slim nav bar pinned at the top once the banner is scrolled away (see _sass/sticky-bar.scss)
 $sticky-bar-height: 48px;
@@ -43,7 +52,7 @@ $sticky-bar-background: $banner-background; // flat and opaque, like the banner
 // Column of dots on the right, one per section (see _sass/section-dots.scss)
 $section-dot-size: 9px;
 $section-dot-hit-size: 22px;  // area around each dot that reacts to the mouse
-$section-dot-color: #111;
+$section-dot-color: #dddddd;
 $section-dots-offset: 12px;   // gap between the dots and the window edge
 $section-dots-offset-small: 2px;
 // Gap around the section panels (one per screen, see _sass/panels.scss)

@@ -24,7 +24,7 @@ html {
     right: 0;
     z-index: 10;
     background-color: $sticky-bar-background;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.25s ease, visibility 0s linear 0.25s;
@@ -51,7 +51,7 @@ html {
 
 .sticky-bar-name {
     font-size: 20px;
-    color: #272727;
+    color: $heading-color;
     margin-right: 20px;
 }
 
