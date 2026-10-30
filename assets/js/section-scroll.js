@@ -120,8 +120,8 @@ function mount(panels) {
         target = y;
     }
 
-    // Scroll by delta px. stopAtEdge: a scroll that moved inside a tall
-    // section stops at its edge instead of pushing on it.
+    // Scroll by delta px. stopAtEdge (page keys): a scroll that moved inside
+    // a tall section stops at its edge, and one from the edge goes through.
     function push(delta, stopAtEdge) {
         const dir = Math.sign(delta);
         const now = performance.now();
@@ -141,6 +141,8 @@ function mount(panels) {
             y += dir * moved;
             rest = stopAtEdge ? 0 : rest - moved;
             pressure = 0;
+        } else if (stopAtEdge) {
+            rest = BREAK;
         }
         pressure += rest;
         if (pressure >= BREAK && list[i + dir]) {
