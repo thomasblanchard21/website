@@ -3,7 +3,7 @@
 /*
  * One-page navigation
  *
- * The nav links scroll to the section headings of index.md. Once the banner has
+ * The nav links scroll to the sections of index.md. Once the banner has
  * scrolled out of view, assets/js/sticky-nav.js shows a slim bar with the
  * site name and the links at the top (.is-visible) and marks the link of the
  * section being read (.is-current). Without JS the bar stays hidden and the
@@ -11,8 +11,7 @@
  */
 
 html {
-    // Keep section headings clear of the bar when jumping to them.
-    scroll-padding-top: $sticky-bar-height + 10px;
+    // Section panels keep clear of the bar on their own (see panels.scss).
     @media (prefers-reduced-motion: no-preference) {
         scroll-behavior: smooth;
     }
@@ -72,10 +71,6 @@ html {
 }
 
 @media (max-width: 500px) {
-    html {
-        // The bar wraps onto two or three lines here.
-        scroll-padding-top: $sticky-bar-height-small + 10px;
-    }
     .sticky-bar-inner {
         justify-content: center;
         padding: 6px 0;
