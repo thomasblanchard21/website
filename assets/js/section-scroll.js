@@ -4,8 +4,8 @@
  * The page snaps from one section panel to the next (CSS scroll snap, see
  * _sass/panels.scss), which on its own moves a whole section per wheel
  * notch. Here the wheel has to travel THRESHOLD px in one direction (with
- * pauses shorter than RESET) before the page moves on to the next section;
- * less does nothing. Inside a section taller than the window, the wheel
+ * pauses shorter than RESET) before the page moves on to the next section,
+ * landing on its top (also when going back up); less does nothing. Inside a section taller than the window, the wheel
  * scrolls it but stops at its edge, and leaving it takes a new gesture.
  * After a move, the rest of the gesture (trackpad momentum) is ignored.
  *
@@ -132,7 +132,7 @@ function mount(panels) {
         sum += delta;
         if (Math.abs(sum) >= THRESHOLD) {
             sum = 0;
-            go(dir > 0 ? next[0] : next[1]);
+            go(next[0]); // the top of the section, either way
         }
     }, { passive: false });
 }
