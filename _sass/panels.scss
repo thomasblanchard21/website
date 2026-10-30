@@ -35,6 +35,7 @@ html {
 .panel {
     margin: $sticky-bar-height + $section-spacing 0 $section-spacing;
     padding: 10px $content-padding;
+    padding: 10px clamp(#{$content-padding}, 5vw, #{$content-padding-wide});
     background-color: $panel-background-opaque;
     border: 1px solid $panel-border;
     border-radius: $panel-radius;

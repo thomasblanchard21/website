@@ -27,7 +27,10 @@ $footer-background: white; // solid full-width band at the bottom of the page
 // Footer height before assets/js/section-scroll.js measures it (or without JS)
 $footer-height: 65px;
 $footer-height-small: 100px; // the footer wraps at phone width
+// Side padding inside the panels grows with the window, from $content-padding
+// up to $content-padding-wide (reached at a 1280px wide window)
 $content-padding: 30px;
+$content-padding-wide: 64px;
 $content-padding-small: 16px;
 // Switch turning the relief animation on/off (top-right corner of the page)
 $relief-toggle-width: 34px;
