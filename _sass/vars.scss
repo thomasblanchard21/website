@@ -8,8 +8,9 @@ $image-size-small: 110px;
 $footer-color: black;
 
 // Header banner (holds the site name and nav, see _sass/banner.scss)
-$banner-height: 300px;
-$banner-height-small: 260px;
+$banner-height: 140px;
+$banner-height-small: 150px; // name and nav stack at phone width
+$banner-background: white; // flat, covers the relief (which shows from the sections down)
 // Page background (domain-warp relief): static background shown without
 // JS/WebGL, and under the canvas while it loads
 $relief-fallback-light: #f3f2ef;
@@ -34,7 +35,7 @@ $relief-toggle-color: #272727;
 // Slim nav bar pinned at the top once the banner is scrolled away (see _sass/sticky-bar.scss)
 $sticky-bar-height: 48px;
 $sticky-bar-height-small: 80px; // the bar wraps at phone width
-$sticky-bar-background: rgba(255, 255, 255, 0.92);
+$sticky-bar-background: $banner-background; // flat and opaque, like the banner
 
 // Overlay scrollbar on the right (see _sass/scrollbar.scss), mouse/trackpad only
 $scrollbar-width: 6px;

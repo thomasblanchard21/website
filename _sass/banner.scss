@@ -6,7 +6,8 @@
  * The background of the whole page is a static pale gradient; when the
  * header effect is on, assets/js/domain-warp-header.js draws a WebGL relief
  * into .relief-canvas, fixed behind the page, and fades it in (.is-ready)
- * once the first frame is rendered.
+ * once the first frame is rendered. The banner has a flat background on top
+ * of it, so the relief only shows behind the sections.
  */
 
 body {
@@ -109,6 +110,7 @@ body {
     display: flex;
     align-items: center;
     height: $banner-height;
+    background-color: $banner-background;
 }
 
 .banner .navbar {
