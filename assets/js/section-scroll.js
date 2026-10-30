@@ -20,7 +20,7 @@
  * into the last screen.
  */
 
-const BREAK = 180;      // px of pressure that takes the page past a section edge (a wheel notch is ~100)
+const BREAK = 260;      // px of pressure that takes the page past a section edge (a wheel notch is ~100)
 const LEAK = 500;       // ms for the pressure to leak down to about a third
 const GLIDE = 90;       // ms, time constant of the scrolling animation
 const LINE = 40;        // px per line, for wheel events counted in lines
