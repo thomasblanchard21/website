@@ -10,8 +10,8 @@
  * One section per screen: each panel is centered in a grid row at least as
  * tall as the window, and the page snaps from one row to the next when
  * scrolled (CSS scroll snap, smooth under the sticky-bar.scss scroll-behavior;
- * assets/js/section-scroll.js makes the mouse wheel take a bit more than one
- * notch). Each panel's scroll margins match its margins, so its snap area,
+ * assets/js/section-scroll.js takes over the wheel and keyboard, so that the
+ * edge of a section resists a gentle scroll). Each panel's scroll margins match its margins, so its snap area,
  * centered on the window, is the whole row. The first screen also holds the
  * banner, and the footer is pulled up over the bottom of the last one
  * (--footer-height, measured by section-scroll.js). A section taller than

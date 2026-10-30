@@ -1,29 +1,31 @@
 /*
  * Section scrolling
  *
- * The page snaps from one section panel to the next (CSS scroll snap, see
- * _sass/panels.scss), which on its own moves a whole section per wheel
- * notch. Here the wheel has to travel THRESHOLD px in one direction (with
- * pauses shorter than RESET) before the page moves on to the next section,
- * landing on its top (also when going back up); less does nothing. Inside a section taller than the window, the wheel
- * scrolls it but stops at its edge, and leaving it takes a new gesture.
- * After a move, the rest of the gesture (trackpad momentum) is ignored.
+ * Moves through the section panels of index.md (one per screen, see
+ * _sass/panels.scss) with the mouse wheel, trackpad and keyboard. Inside a
+ * section taller than the window, scrolling moves through it as usual. The
+ * edge of a section pushes back: scrolling into it builds up a pressure that
+ * leaks away over time, and the page moves on to the next section, landing
+ * on its top, once the pressure reaches BREAK. A gentle scroll stops at the
+ * edge; a hard one goes through, over several sections if it keeps going.
+ * Arrow keys push like wheel notches; Page Up/Down and Space scroll a page,
+ * stopping at the edge of a tall section, and move on from the edge.
  *
- * All vertical wheel scrolling is done here (the events are cancelled):
- * left to the browser, a scroll overshooting the edge of a tall section
- * snaps on to the next one, and Chrome only lets a script cancel a wheel
- * sequence from its first event, too early to know.
+ * The scrolling is animated here (the browser's own is cancelled), easing
+ * towards a target, with the CSS scroll snapping off meanwhile. Under
+ * reduced motion the page jumps instead. Touch scrolling keeps the native
+ * snapping, and so does everything without JS.
  *
  * Also sets --footer-height on <html>, which the CSS uses to fit the footer
- * into the last screen. Touch and keyboard scrolling keep the native
- * snapping. Without JS the CSS fallbacks apply.
+ * into the last screen.
  */
 
-const THRESHOLD = 160;  // px of wheel travel to change section (a notch is ~100)
-const QUIET = 200;      // ms without wheel events that ends a gesture
-const RESET = 800;      // ms without wheel events that resets the travel count
+const BREAK = 180;      // px of pressure that takes the page past a section edge (a wheel notch is ~100)
+const LEAK = 500;       // ms for the pressure to leak down to about a third
+const GLIDE = 90;       // ms, time constant of the scrolling animation
 const LINE = 40;        // px per line, for wheel events counted in lines
-const STEP = 50;        // px; wheel steps this big are animated (mouse notches), smaller ones follow at once (trackpads)
+const ARROW = 100;      // px per arrow key press, like a wheel notch
+const PAGE = 0.85;      // Page Up/Down and Space, as a fraction of the window height
 
 function measureFooter(footer) {
     const set = () => {
@@ -52,89 +54,145 @@ function screens(panels) {
     });
 }
 
-function mount(panels) {
-    let sum = 0;            // wheel travel towards the next section
-    let last = -Infinity;   // time of the previous wheel event
-    let lastDir = 0;        // direction of the previous wheel event
-    let target = 0;         // where the scrolling of the gesture is heading
-    let moving = false;     // true from a section change to the end of its gesture
-    let inside = false;     // the current gesture scrolled inside a tall section
-    let scrolling = false;  // true while the page scrolls to a section
-
-    function onScrollEnd() {
-        scrolling = false;
-    }
-    window.addEventListener("scrollend", onScrollEnd);
-
-    function go(y) {
-        moving = true;
-        scrolling = true;
-        target = y;
-        window.scrollTo({ top: y });
-        if (!("onscrollend" in window)) {
-            setTimeout(onScrollEnd, 800);
+// The screen whose range is closest to scroll position y.
+function closest(list, y) {
+    let index = 0;
+    let best = Infinity;
+    list.forEach(([lo, hi], k) => {
+        const d = y < lo ? lo - y : y > hi ? y - hi : 0;
+        if (d < best) {
+            best = d;
+            index = k;
         }
+    });
+    return index;
+}
+
+function mount(panels) {
+    const root = document.documentElement;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let target = null;      // where the animation is heading, null when idle
+    let pos = 0;            // animated scroll position
+    let frame = 0;
+    let time = 0;           // time of the previous animation frame
+    let pressure = 0;       // px pushed against the current section edge
+    let pressureDir = 0;
+    let pressureTime = 0;
+
+    function stop() {
+        cancelAnimationFrame(frame);
+        frame = 0;
+        target = null;
+        root.style.scrollSnapType = "";
+    }
+
+    function step(now) {
+        if (Math.abs(window.scrollY - pos) > 2) {
+            stop(); // something else scrolled the page (a link, touch)
+            return;
+        }
+        pos += (target - pos) * (1 - Math.exp(-(now - time) / GLIDE));
+        time = now;
+        if (Math.abs(target - pos) < 0.5) {
+            window.scrollTo({ top: target, behavior: "instant" });
+            stop();
+            return;
+        }
+        window.scrollTo({ top: pos, behavior: "instant" });
+        frame = requestAnimationFrame(step);
+    }
+
+    function scrollTo(y) {
+        if (reduced.matches) {
+            window.scrollTo({ top: y, behavior: "instant" });
+            return;
+        }
+        root.style.scrollSnapType = "none";
+        if (!frame) {
+            pos = window.scrollY;
+            time = performance.now();
+            frame = requestAnimationFrame(step);
+        }
+        target = y;
+    }
+
+    // Scroll by delta px. stopAtEdge: a scroll that moved inside a tall
+    // section stops at its edge instead of pushing on it.
+    function push(delta, stopAtEdge) {
+        const dir = Math.sign(delta);
+        const now = performance.now();
+        pressure = dir === pressureDir ? pressure * Math.exp(-(now - pressureTime) / LEAK) : 0;
+        pressureDir = dir;
+        pressureTime = now;
+
+        const list = screens(panels);
+        let y = target === null ? window.scrollY : target;
+        let i = closest(list, y);
+        const [lo, hi] = list[i];
+        // (Less than 2px of room is the edge: the page may settle a pixel short.)
+        const room = Math.max(0, dir > 0 ? hi - y : y - lo);
+        let rest = Math.abs(delta);
+        if (room >= 2) {
+            const moved = Math.min(rest, room);
+            y += dir * moved;
+            rest = stopAtEdge ? 0 : rest - moved;
+            pressure = 0;
+        }
+        pressure += rest;
+        if (pressure >= BREAK && list[i + dir]) {
+            i += dir;
+            y = list[i][0];
+            pressure = 0;
+        }
+        scrollTo(y);
     }
 
     window.addEventListener("wheel", (e) => {
         if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.deltaY === 0) {
             return; // pinch zoom, sideways scroll
         }
-        const dir = Math.sign(e.deltaY);
-        const delta = e.deltaY * (e.deltaMode === 1 ? LINE : e.deltaMode === 2 ? window.innerHeight : 1);
-        const y = window.scrollY;
-        const gap = e.timeStamp - last;
-        const turned = dir !== lastDir;
-        last = e.timeStamp;
-        lastDir = dir;
         e.preventDefault();
-        if (moving) {
-            if (scrolling || gap < QUIET) {
-                return;
-            }
-            moving = false;
-        }
-        if (gap > RESET || turned) {
-            sum = 0;
-            target = y;
-        }
-        if (gap > QUIET || turned) {
-            inside = false;
-        }
-
-        const list = screens(panels);
-        // The current screen: the one whose range is closest to the scroll position.
-        let i = 0;
-        let best = Infinity;
-        list.forEach(([lo, hi], k) => {
-            const d = y < lo ? lo - y : y > hi ? y - hi : 0;
-            if (d < best) {
-                best = d;
-                i = k;
-            }
-        });
-        const [lo, hi] = list[i];
-        // The page may still be on its way to where earlier events sent it.
-        const from = dir > 0 ? Math.max(target, y) : Math.min(target, y);
-        if ((dir > 0 && from < hi - 1) || (dir < 0 && from > lo + 1)) {
-            // Inside a tall section: scroll it, up to its edge.
-            sum = 0;
-            inside = true;
-            target = Math.min(hi, Math.max(lo, from + delta));
-            window.scrollTo({ top: target, behavior: Math.abs(delta) < STEP ? "instant" : undefined });
-            return;
-        }
-
-        const next = list[i + dir];
-        if (!next || inside) {
-            return;
-        }
-        sum += delta;
-        if (Math.abs(sum) >= THRESHOLD) {
-            sum = 0;
-            go(next[0]); // the top of the section, either way
-        }
+        push(e.deltaY * (e.deltaMode === 1 ? LINE : e.deltaMode === 2 ? window.innerHeight : 1), false);
     }, { passive: false });
+
+    window.addEventListener("keydown", (e) => {
+        if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) {
+            return;
+        }
+        const el = document.activeElement;
+        if (el && (el.isContentEditable || el.closest("input, textarea, select, button"))) {
+            return; // keys that belong to the focused control
+        }
+        const page = window.innerHeight * PAGE;
+        switch (e.key) {
+            case "ArrowDown":
+                push(ARROW, false);
+                break;
+            case "ArrowUp":
+                push(-ARROW, false);
+                break;
+            case "PageDown":
+                push(page, true);
+                break;
+            case "PageUp":
+                push(-page, true);
+                break;
+            case " ":
+                push(e.shiftKey ? -page : page, true);
+                break;
+            case "Home":
+                pressure = 0;
+                scrollTo(0);
+                break;
+            case "End":
+                pressure = 0;
+                scrollTo(root.scrollHeight - window.innerHeight);
+                break;
+            default:
+                return;
+        }
+        e.preventDefault();
+    });
 }
 
 const footer = document.querySelector(".site-footer");
