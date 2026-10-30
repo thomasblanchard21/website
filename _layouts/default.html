@@ -31,8 +31,6 @@
         <script type="module" src="{{ "/assets/js/domain-warp-header.js" | relative_url }}"></script>
     {% endif %}
     <script type="module" src="{{ "/assets/js/sticky-nav.js" | relative_url }}"></script>
-    <script type="module" src="{{ "/assets/js/scrollbar.js" | relative_url }}"></script>
-    <script type="module" src="{{ "/assets/js/reveal.js" | relative_url }}"></script>
     {% if site.favicon %}
         <link rel="icon" type="image/ico" href="{{ site.favicon_location }}">
         <link rel="shortcut-icon" type="image/ico" href="{{ site.favicon_location }}">
@@ -89,6 +87,20 @@
                     {% include nav-items.html li_class="sticky-bar-item" %}
                 </ul>
             </div>
+        </nav>
+        {% comment %}
+            One dot per section on the right (see _sass/section-dots.scss). A
+            shortcut for the pointer only: the banner and the sticky bar hold
+            the same links for keyboard and screen reader users.
+        {% endcomment %}
+        <nav class="section-dots" aria-hidden="true">
+            <ul>
+                {% for x in site.nav %}
+                    {% unless x.link contains "://" %}
+                        <li><a href="{{ x.link | relative_url }}" tabindex="-1"><span class="section-dot-label">{{ x.name }}</span></a></li>
+                    {% endunless %}
+                {% endfor %}
+            </ul>
         </nav>
         {% if page.is_contact == true %}
             <div class="container content contact">

@@ -37,19 +37,15 @@ $sticky-bar-height: 48px;
 $sticky-bar-height-small: 80px; // the bar wraps at phone width
 $sticky-bar-background: $banner-background; // flat and opaque, like the banner
 
-// Overlay scrollbar on the right (see _sass/scrollbar.scss), mouse/trackpad only
-$scrollbar-width: 6px;
-$scrollbar-height: 60vh;
-$scrollbar-offset: 12px;      // gap between the track and the window edge
-$scrollbar-hit-width: 20px;   // invisible area around the track that reacts to the mouse
-$scrollbar-track-color: rgba(0, 0, 0, 0.12);
-$scrollbar-thumb-color: #111;
-$scrollbar-fade: 0.6s;
-// Gap between the section panels of the one-page site
+// Column of dots on the right, one per section (see _sass/section-dots.scss)
+$section-dot-size: 9px;
+$section-dot-hit-size: 22px;  // area around each dot that reacts to the mouse
+$section-dot-color: #111;
+$section-dots-offset: 12px;   // gap between the dots and the window edge
+$section-dots-offset-small: 2px;
+// Gap around the section panels (one per screen, see _sass/panels.scss)
 $section-spacing: 40px;
 $section-spacing-small: 24px;
-// Fade-in of the sections as they scroll into view (see _sass/reveal.scss)
-$reveal-duration: 0.8s;
 
 /*
  * Build Variables, don't touch

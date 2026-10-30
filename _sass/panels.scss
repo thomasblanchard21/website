@@ -6,27 +6,45 @@
  * Each section of index.md is wrapped in a <section class="panel">: a frosted
  * glass card that blurs the relief behind it so the text stays readable.
  * Browsers without backdrop-filter get a more opaque panel instead.
+ *
+ * One section per screen: each panel sits at the top of a grid row at least
+ * as tall as the window, and the page snaps from one row to the next when
+ * scrolled (CSS scroll snap, smooth under the sticky-bar.scss scroll-behavior).
+ * The first screen also holds the banner, the last one ends with a snap on
+ * the footer. A section taller than the window scrolls freely until its end.
  */
 
+html {
+    scroll-snap-type: y mandatory;
+}
+
 .content {
-    padding-top: $section-spacing; // gap below the banner
-    padding-bottom: $section-spacing;
+    display: grid;
+    align-items: start;
+    grid-template-rows: minmax(calc(100vh - #{$banner-height}), auto);
+    grid-template-rows: minmax(calc(100svh - #{$banner-height}), auto);
+    grid-auto-rows: minmax(100vh, auto);
+    grid-auto-rows: minmax(100svh, auto);
 }
 
 .panel {
+    margin: $sticky-bar-height + $section-spacing 0 $section-spacing;
     padding: 10px $content-padding;
     background-color: $panel-background-opaque;
     border: 1px solid $panel-border;
     border-radius: $panel-radius;
     box-shadow: $panel-shadow;
-    & + & {
-        margin-top: $section-spacing;
+    // Snap the top of the screen, above the panel (clear of the sticky bar).
+    scroll-snap-align: start;
+    scroll-margin: $sticky-bar-height + $section-spacing 0 $section-spacing;
+    &:first-child {
+        margin-top: $section-spacing; // gap below the banner
+        scroll-margin-top: $banner-height + $section-spacing;
     }
-    // A nav jump lands on the heading; keep the panel's top edge in view too
-    // (panel padding + heading margin).
-    > h2:first-child {
-        scroll-margin-top: 30px;
-    }
+}
+
+.site-footer {
+    scroll-snap-align: end;
 }
 
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
@@ -39,13 +57,16 @@
 
 @media (max-width: 500px) {
     .content {
-        padding-top: $section-spacing-small;
-        padding-bottom: $section-spacing-small;
+        grid-template-rows: minmax(calc(100vh - #{$banner-height-small}), auto);
+        grid-template-rows: minmax(calc(100svh - #{$banner-height-small}), auto);
     }
     .panel {
+        margin: $sticky-bar-height-small + $section-spacing-small 0 $section-spacing-small;
         padding: 10px $content-padding-small;
-        & + & {
+        scroll-margin: $sticky-bar-height-small + $section-spacing-small 0 $section-spacing-small;
+        &:first-child {
             margin-top: $section-spacing-small;
+            scroll-margin-top: $banner-height-small + $section-spacing-small;
         }
     }
 }
