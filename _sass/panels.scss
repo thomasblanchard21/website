@@ -7,11 +7,15 @@
  * glass card that blurs the relief behind it so the text stays readable.
  * Browsers without backdrop-filter get a more opaque panel instead.
  *
- * One section per screen: each panel sits at the top of a grid row at least
- * as tall as the window, and the page snaps from one row to the next when
- * scrolled (CSS scroll snap, smooth under the sticky-bar.scss scroll-behavior).
- * The first screen also holds the banner, the last one ends with a snap on
- * the footer. A section taller than the window scrolls freely until its end.
+ * One section per screen: each panel is centered in a grid row at least as
+ * tall as the window, and the page snaps from one row to the next when
+ * scrolled (CSS scroll snap, smooth under the sticky-bar.scss scroll-behavior;
+ * assets/js/section-scroll.js makes the mouse wheel take a bit more than one
+ * notch). Each panel's scroll margins match its margins, so its snap area,
+ * centered on the window, is the whole row. The first screen also holds the
+ * banner, and the footer is pulled up over the bottom of the last one
+ * (--footer-height, measured by section-scroll.js). A section taller than
+ * the window scrolls freely until its end.
  */
 
 html {
@@ -20,11 +24,12 @@ html {
 
 .content {
     display: grid;
-    align-items: start;
+    align-items: center;
     grid-template-rows: minmax(calc(100vh - #{$banner-height}), auto);
     grid-template-rows: minmax(calc(100svh - #{$banner-height}), auto);
     grid-auto-rows: minmax(100vh, auto);
     grid-auto-rows: minmax(100svh, auto);
+    margin-bottom: calc(-1 * var(--footer-height, #{$footer-height}));
 }
 
 .panel {
@@ -34,17 +39,16 @@ html {
     border: 1px solid $panel-border;
     border-radius: $panel-radius;
     box-shadow: $panel-shadow;
-    // Snap the top of the screen, above the panel (clear of the sticky bar).
-    scroll-snap-align: start;
+    scroll-snap-align: center;
     scroll-margin: $sticky-bar-height + $section-spacing 0 $section-spacing;
     &:first-child {
         margin-top: $section-spacing; // gap below the banner
         scroll-margin-top: $banner-height + $section-spacing;
     }
-}
-
-.site-footer {
-    scroll-snap-align: end;
+    &:last-child {
+        margin-bottom: calc(#{$section-spacing} + var(--footer-height, #{$footer-height}));
+        scroll-margin-bottom: calc(#{$section-spacing} + var(--footer-height, #{$footer-height}));
+    }
 }
 
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
@@ -59,6 +63,7 @@ html {
     .content {
         grid-template-rows: minmax(calc(100vh - #{$banner-height-small}), auto);
         grid-template-rows: minmax(calc(100svh - #{$banner-height-small}), auto);
+        margin-bottom: calc(-1 * var(--footer-height, #{$footer-height-small}));
     }
     .panel {
         margin: $sticky-bar-height-small + $section-spacing-small 0 $section-spacing-small;
@@ -67,6 +72,10 @@ html {
         &:first-child {
             margin-top: $section-spacing-small;
             scroll-margin-top: $banner-height-small + $section-spacing-small;
+        }
+        &:last-child {
+            margin-bottom: calc(#{$section-spacing-small} + var(--footer-height, #{$footer-height-small}));
+            scroll-margin-bottom: calc(#{$section-spacing-small} + var(--footer-height, #{$footer-height-small}));
         }
     }
 }
