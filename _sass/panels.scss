@@ -9,6 +9,7 @@
  */
 
 .content {
+    padding-top: $section-spacing; // gap below the banner
     padding-bottom: $section-spacing;
 }
 
@@ -38,6 +39,7 @@
 
 @media (max-width: 500px) {
     .content {
+        padding-top: $section-spacing-small;
         padding-bottom: $section-spacing-small;
     }
     .panel {
