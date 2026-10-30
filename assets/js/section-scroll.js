@@ -73,6 +73,7 @@ function mount(panels) {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let target = null;      // where the animation is heading, null when idle
     let pos = 0;            // animated scroll position
+    let applied = 0;        // scroll position after the previous frame
     let frame = 0;
     let time = 0;           // time of the previous animation frame
     let pressure = 0;       // px pushed against the current section edge
@@ -87,18 +88,20 @@ function mount(panels) {
     }
 
     function step(now) {
-        if (Math.abs(window.scrollY - pos) > 2) {
+        if (Math.abs(window.scrollY - applied) > 2) {
             stop(); // something else scrolled the page (a link, touch)
             return;
         }
-        pos += (target - pos) * (1 - Math.exp(-(now - time) / GLIDE));
-        time = now;
+        // (A frame's timestamp may be older than the start of the animation.)
+        pos += (target - pos) * (1 - Math.exp(-Math.max(0, now - time) / GLIDE));
+        time = Math.max(time, now);
         if (Math.abs(target - pos) < 0.5) {
             window.scrollTo({ top: target, behavior: "instant" });
             stop();
             return;
         }
         window.scrollTo({ top: pos, behavior: "instant" });
+        applied = window.scrollY;
         frame = requestAnimationFrame(step);
     }
 
@@ -110,6 +113,7 @@ function mount(panels) {
         root.style.scrollSnapType = "none";
         if (!frame) {
             pos = window.scrollY;
+            applied = pos;
             time = performance.now();
             frame = requestAnimationFrame(step);
         }
