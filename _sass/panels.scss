@@ -7,9 +7,10 @@
  * glass card that blurs the relief behind it so the text stays readable.
  * Browsers without backdrop-filter get a more opaque panel instead.
  *
- * One section per screen: each panel is centered in a grid row at least as
- * tall as the window, and the page snaps from one row to the next when
- * scrolled (CSS scroll snap, smooth under the sticky-bar.scss scroll-behavior;
+ * One section per screen: each panel fills a grid row at least as tall as
+ * the window, less its margins (the gaps above and below it, the top one also
+ * clearing the sticky bar), whatever its content, and the page snaps from
+ * one row to the next when scrolled (CSS scroll snap, smooth under the sticky-bar.scss scroll-behavior;
  * assets/js/section-scroll.js takes over the wheel and keyboard, so that the
  * edge of a section resists a gentle scroll). Each panel's scroll margins match its margins, so its snap area,
  * centered on the window, is the whole row. The first screen also holds the
@@ -24,7 +25,6 @@ html {
 
 .content {
     display: grid;
-    align-items: center;
     grid-template-rows: minmax(calc(100vh - #{$banner-height}), auto);
     grid-template-rows: minmax(calc(100svh - #{$banner-height}), auto);
     grid-auto-rows: minmax(100vh, auto);
