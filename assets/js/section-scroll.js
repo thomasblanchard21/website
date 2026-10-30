@@ -7,7 +7,9 @@
  * edge of a section pushes back: scrolling into it builds up a pressure that
  * leaks away over time, and the page moves on to the next section, landing
  * on its top, once the pressure reaches BREAK. A gentle scroll stops at the
- * edge; a hard one goes through, over several sections if it keeps going.
+ * edge; a typical flick of the mouse wheel goes on to the top of the next
+ * section (the rest of the gesture only pushes on the next edge), and a hard
+ * one goes through several sections.
  * Arrow keys push like wheel notches; Page Up/Down and Space scroll a page,
  * stopping at the edge of a tall section, and move on from the edge.
  *
@@ -20,8 +22,9 @@
  * into the last screen.
  */
 
-const BREAK = 400;      // px of pressure that takes the page past a section edge (a wheel notch is ~100)
+const BREAK = 240;      // px of pressure that takes the page past a section edge (a wheel notch is ~100)
 const LEAK = 500;       // ms for the pressure to leak down to about a third
+const QUIET = 150;      // ms without input that ends a gesture
 const GLIDE = 90;       // ms, time constant of the scrolling animation
 const LINE = 40;        // px per line, for wheel events counted in lines
 const ARROW = 100;      // px per arrow key press, like a wheel notch
@@ -79,6 +82,7 @@ function mount(panels) {
     let pressure = 0;       // px pushed against the current section edge
     let pressureDir = 0;
     let pressureTime = 0;
+    let crossed = false;    // the current gesture moved on to another section
 
     function stop() {
         cancelAnimationFrame(frame);
@@ -125,6 +129,9 @@ function mount(panels) {
     function push(delta, stopAtEdge) {
         const dir = Math.sign(delta);
         const now = performance.now();
+        if (dir !== pressureDir || now - pressureTime > QUIET) {
+            crossed = false;
+        }
         pressure = dir === pressureDir ? pressure * Math.exp(-(now - pressureTime) / LEAK) : 0;
         pressureDir = dir;
         pressureTime = now;
@@ -133,8 +140,9 @@ function mount(panels) {
         let y = target === null ? window.scrollY : target;
         let i = closest(list, y);
         const [lo, hi] = list[i];
-        // (Less than 2px of room is the edge: the page may settle a pixel short.)
-        const room = Math.max(0, dir > 0 ? hi - y : y - lo);
+        // (Less than 2px of room is the edge: the page may settle a pixel short.
+        // After moving on, the rest of the gesture stays on the section's top.)
+        const room = crossed ? 0 : Math.max(0, dir > 0 ? hi - y : y - lo);
         let rest = Math.abs(delta);
         if (room >= 2) {
             const moved = Math.min(rest, room);
@@ -149,6 +157,7 @@ function mount(panels) {
             i += dir;
             y = list[i][0];
             pressure = 0;
+            crossed = true;
         }
         scrollTo(y);
     }
